@@ -8,6 +8,7 @@ using DifferentialEquations
 using Interpolations
 using Plots
 using StatsBase, Statistics
+using LinearAlgebra
 
 eps_acr = 0.01 # the threshold value for checking ACR. 
 # If 0.4 and 0.6 quantiles of steady-state values differ by less than eps_acr, 
@@ -103,7 +104,7 @@ for iter_network in 1:num_repeat_net
 
     source_mat = total_complex[:, list_source_id]
     product_mat = total_complex[:, list_product_id]
-
+    stoi_mat = product_mat - source_mat
     ## One can manually specify the reaction network using this part. 
 
     # start comment - examples, use #= (multiline comments) =#
@@ -277,6 +278,8 @@ end
 
 network_txt = source_txt .* fill(" -> ", num_R) .* product_txt
 network_txt_short = source_txt_short .* fill(" -> ", num_R) .* product_txt_short
+rank(stoi_mat)
+
 #end
 
 source_txt
