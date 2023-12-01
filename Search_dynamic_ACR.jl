@@ -175,17 +175,25 @@ for iter_network in 1:num_repeat_net
         upp_val = quantile(final_val_mat[1, :], 0.6) # 40th out of 100 for the 1st species
         low_val = quantile(final_val_mat[1, :], 0.4) # 60th out of 100 for the 1st species
         # extend the code for all the species not only the 1st species.
+        # upp_val = fill(0, num_S)
+        # low_val = fill(0, num_S)
+        # for i in 1:num_S
+        #     upp_val[i] = quantile(final_val_mat[i, :], 0.6)
+        #     low_val[i] = quantile(final_val_mat[i, :], 0.4)      
+        # end
+        # upp_val = quantile(final_val_mat[1, :], 0.6)
+        # low_val = quantile(final_val_mat[1, :], 0.4)
 
-        if (upp_val - low_val < eps_acr && low_val > thres_positive)
-            list_acr_id_par[iter_par] = 1
+        if (upp_val - low_val < eps_acr && low_val > thres_positive) # Do we need a positivity criterion for steady states?
+            list_acr_id_par[iter_par] = 1 # 모든 species를 따지려면, list_acr_id_par를 matrix로 바꿔야 함
         end
     end
     if (sum(list_acr_id_par) > 0)
-        list_acr_id[iter_network] = list_acr_id[iter_network] + 1
+        list_acr_id[iter_network] = list_acr_id[iter_network] + 1  # 모든 species를 따지려면, list_acr_id를 matrix로 바꿔야 함
         # partial ACR (ACR for a subset of parameter sets)
     end
     if (prod(list_acr_id_par) > 0)
-        list_acr_id[iter_network] = list_acr_id[iter_network] + 1
+        list_acr_id[iter_network] = list_acr_id[iter_network] + 1 # 모든 species를 따지려면, list_acr_id를 matrix로 바꿔야 함
         # complete ACR (ACR for a subset of parameter sets)
     end
     matrix_R_id[:, iter_network] = list_R_id
@@ -232,10 +240,11 @@ for check_net_id in net_list_with_acr ## the code below is now designed for one 
         list_source_id[i] = sr_i #Int(sr_i)
         list_product_id[i] = pd_i
     end
-    #println("source:")
     source_mat = total_complex[:, list_source_id]
-    #println("product:")
     product_mat = total_complex[:, list_product_id]
+    
+    # The code below is the module for "writing down" a reaction network. 
+    # Let's change the below code as a 'function' not lines of code.
     for i in 1:num_R
         plus_flag_source = 0 # flag variable for source complexes to decide adding "+" symbol in strings
         plus_flag_product = 0 # flag variable for product complexes to decide adding "+" symbol in strings
