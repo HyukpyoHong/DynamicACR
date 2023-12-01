@@ -85,8 +85,6 @@ num_total_R = num_C * (num_C - 1)
 matrix_R_id = fill(0, num_R, num_repeat_net)
 list_acr_id = fill(0, num_repeat_net)
 
-
-
 ## Beginning of the random network search
 for iter_network in 1:num_repeat_net
     list_R_id = sample(1:num_total_R, num_R)
@@ -105,6 +103,11 @@ for iter_network in 1:num_repeat_net
     source_mat = total_complex[:, list_source_id]
     product_mat = total_complex[:, list_product_id]
     stoi_mat = product_mat - source_mat
+    
+    # these lines for searching only networks with conservation laws.
+    if rank(stoi_mat) == num_S
+        continue
+    end
     ## One can manually specify the reaction network using this part. 
 
     # start comment - examples, use #= (multiline comments) =#
@@ -156,6 +159,7 @@ for iter_network in 1:num_repeat_net
 
             sol1 = solve(prob1, Tsit5(), saveat=1) # save the solution with the interval 'saveat'. saveat would be 1 or 0.1. 
             # sol1 = solve(prob1);
+            # plot(sol1)
             sol_mat1 = reduce(hcat, sol1.u)'
             length_tspan = length(sol1.t)
             final_val_mat[:, iter_init] = sol_mat1[length_tspan, :]
@@ -192,6 +196,9 @@ path = "/Users/hyukpyohong/Dropbox/CRN_dynamicACR/Codes/"
 CSV.write(path * "list_acr_id_S" * string(num_S) * "R" * string(num_R) * ".csv", Tables.table(list_acr_id), writeheader=false)
 CSV.write(path * "matrix_R_id_S" * string(num_S) * "R" * string(num_R) * ".csv", Tables.table(matrix_R_id), writeheader=false)
 
+# CSV.write(path * "list_acr_id_S" * string(num_S) * "R" * string(num_R) * "_nonfullrank.csv", Tables.table(list_acr_id), writeheader=false)
+# CSV.write(path * "matrix_R_id_S" * string(num_S) * "R" * string(num_R) * "_nonfullrank.csv", Tables.table(matrix_R_id), writeheader=false)
+
 
 # These lines below are for loading saved data
 #xx = CSV.read(path * "list_acr_id_S" * string(num_S) * "R" * string(num_R) * ".csv", DataFrame, header = false)
@@ -201,86 +208,98 @@ CSV.write(path * "matrix_R_id_S" * string(num_S) * "R" * string(num_R) * ".csv",
 
 net_list_with_acr = findall(list_acr_id .> 0);
 
-#for check_net_id in net_list_with_acr ## the code below is now designed for one instance of reaction network not for loop.
+for check_net_id in net_list_with_acr ## the code below is now designed for one instance of reaction network not for loop.
 
+    #check_net_id = net_list_with_acr[5]
+    list_R_id = matrix_R_id[:, check_net_id]
+    list_source_id = fill(0, num_R)
+    list_product_id = fill(0, num_R)
 
-check_net_id = 3
-list_R_id = matrix_R_id[:, check_net_id]
-list_source_id = fill(0, num_R)
-list_product_id = fill(0, num_R)
+    source_txt = fill("", num_R)
+    product_txt = fill("", num_R)
+    source_txt_short = fill("", num_R)
+    product_txt_short = fill("", num_R)
+    network_txt = fill("", num_R)
+    network_txt_short = fill("", num_R)
 
-source_txt = fill("", num_R);
-product_txt = fill("", num_R);
-source_txt_short = fill("", num_R);
-product_txt_short = fill("", num_R);
-network_txt = fill("", num_R);
-network_txt_short = fill("", num_R);
-
-for i in 1:num_R
-    sr_i = Int(floor((list_R_id[i] - 1) / (num_C - 1))) + 1
-    pd_i = mod((list_R_id[i] - 1), (num_C - 1)) + 1
-    if sr_i <= pd_i
-        pd_i = pd_i + 1
+    for i in 1:num_R
+        sr_i = Int(floor((list_R_id[i] - 1) / (num_C - 1))) + 1
+        pd_i = mod((list_R_id[i] - 1), (num_C - 1)) + 1
+        if sr_i <= pd_i
+            pd_i = pd_i + 1
+        end
+        list_source_id[i] = sr_i #Int(sr_i)
+        list_product_id[i] = pd_i
     end
-    list_source_id[i] = sr_i #Int(sr_i)
-    list_product_id[i] = pd_i
+    #println("source:")
+    source_mat = total_complex[:, list_source_id]
+    #println("product:")
+    product_mat = total_complex[:, list_product_id]
+    for i in 1:num_R
+        plus_flag_source = 0 # flag variable for source complexes to decide adding "+" symbol in strings
+        plus_flag_product = 0 # flag variable for product complexes to decide adding "+" symbol in strings
+        for j in 1:num_S
+            # create a long version of strings, e.g., 0A+3B+1C
+            source_txt[i] = source_txt[i] * string(source_mat[j, i]) * string(Char(64 + j))
+            product_txt[i] = product_txt[i] * string(product_mat[j, i]) * string(Char(64 + j))
+            if j < num_S
+                source_txt[i] = source_txt[i] * "+"
+                product_txt[i] = product_txt[i] * "+"
+            end
+
+            # create a short version of strings, e.g., 3B+C instead of 0A+3B+1C 
+            if source_mat[j, i] > 1
+                source_txt_short[i] = source_txt_short[i] * string(source_mat[j, i]) * string(Char(64 + j))
+                plus_flag_source = 1
+            elseif source_mat[j, i] == 1
+                source_txt_short[i] = source_txt_short[i] * string(Char(64 + j))
+                plus_flag_source = 1
+                # omit "1" for the coefficient, i.e., use "A" instead of "1A"
+            end
+
+            if product_mat[j, i] > 1
+                product_txt_short[i] = product_txt_short[i] * string(product_mat[j, i]) * string(Char(64 + j))
+                plus_flag_product = 1
+            elseif product_mat[j, i] == 1
+                product_txt_short[i] = product_txt_short[i] * string(Char(64 + j))
+                plus_flag_product = 1
+                # omit "1" for the coefficient, i.e., use "A" instead of "1A"
+            end
+            if sum(source_mat[(j+1):end, i]) > 0 && plus_flag_source > 0
+                source_txt_short[i] = source_txt_short[i] * "+" # add "=" symbol if there is anything else to add. 
+                plus_flag_source = 0
+            end
+            if sum(product_mat[(j+1):end, i]) > 0 && plus_flag_product > 0
+                product_txt_short[i] = product_txt_short[i] * "+" # add "=" symbol if there is anything else to add. 
+                plus_flag_product = 0
+            end
+        end
+        if source_txt_short[i] == ""
+            source_txt_short[i] = "0" # add "0" is the source complex of a reaction is the zero complex.
+        end
+        if product_txt_short[i] == ""
+            product_txt_short[i] = "0" # add "0" is the product complex of a reaction is the zero complex.
+        end
+    end
+
+    network_txt = source_txt .* fill(" -> ", num_R) .* product_txt
+    network_txt_short = source_txt_short .* fill(" -> ", num_R) .* product_txt_short
+    
+    println(network_txt_short)
+    # rank(stoi_mat)
+    # if rank(stoi_mat) < num_S
+    #     println(check_net_id)
+    #     break
+    # end
+    
+    # kernel(stoi_mat)
+    # L_ker = nullspace(stoi_mat')
+    # #L_ker = nullspace(s');
+    # if length(L_ker) > 0
+    #     L_ker_norm = L_ker / L_ker[1]
+    #     # Int.(round.(L_ker_norm))
+    # end
 end
-println("source:")
-source_mat = total_complex[:, list_source_id]
-println("product:")
-product_mat = total_complex[:, list_product_id]
-for i in 1:num_R
-    plus_flag_source = 0 # flag variable for source complexes to decide adding "+" symbol in strings
-    plus_flag_product = 0 # flag variable for product complexes to decide adding "+" symbol in strings
-    for j in 1:num_S
-        # create a long version of strings, e.g., 0A+3B+1C
-        source_txt[i] = source_txt[i] * string(source_mat[j, i]) * string(Char(64 + j))
-        product_txt[i] = product_txt[i] * string(product_mat[j, i]) * string(Char(64 + j))
-        if j < num_S
-            source_txt[i] = source_txt[i] * "+"
-            product_txt[i] = product_txt[i] * "+"
-        end
-
-        # create a short version of strings, e.g., 3B+C instead of 0A+3B+1C 
-        if source_mat[j, i] > 1
-            source_txt_short[i] = source_txt_short[i] * string(source_mat[j, i]) * string(Char(64 + j))
-            plus_flag_source = 1
-        elseif source_mat[j, i] == 1
-            source_txt_short[i] = source_txt_short[i] * string(Char(64 + j))
-            plus_flag_source = 1
-            # omit "1" for the coefficient, i.e., use "A" instead of "1A"
-        end
-
-        if product_mat[j, i] > 1
-            product_txt_short[i] = product_txt_short[i] * string(product_mat[j, i]) * string(Char(64 + j))
-            plus_flag_product = 1
-        elseif product_mat[j, i] == 1
-            product_txt_short[i] = product_txt_short[i] * string(Char(64 + j))
-            plus_flag_product = 1
-            # omit "1" for the coefficient, i.e., use "A" instead of "1A"
-        end
-        if sum(source_mat[(j+1):end, i]) > 0 && plus_flag_source > 0
-            source_txt_short[i] = source_txt_short[i] * "+" # add "=" symbol if there is anything else to add. 
-            plus_flag_source = 0
-        end
-        if sum(product_mat[(j+1):end, i]) > 0 && plus_flag_product > 0
-            product_txt_short[i] = product_txt_short[i] * "+" # add "=" symbol if there is anything else to add. 
-            plus_flag_product = 0
-        end
-    end
-    if source_txt_short[i] == ""
-        source_txt_short[i] = "0" # add "0" is the source complex of a reaction is the zero complex.
-    end
-    if product_txt_short[i] == ""
-        product_txt_short[i] = "0" # add "0" is the product complex of a reaction is the zero complex.
-    end
-end
-
-network_txt = source_txt .* fill(" -> ", num_R) .* product_txt
-network_txt_short = source_txt_short .* fill(" -> ", num_R) .* product_txt_short
-rank(stoi_mat)
-
-#end
 
 source_txt
 product_txt
