@@ -1,3 +1,6 @@
+include("source_ACR.jl")
+import .source_ACR as acr
+
 ## Initialization
 # pakages
 # Pkg.add()
@@ -83,7 +86,7 @@ end
 ## Generate a (mono or bimolecular) random network with the given numbers of species and reactions (num_S and num_R)
 num_total_R = num_C * (num_C - 1)
 matrix_R_id = fill(0, num_R, num_repeat_net)
-list_acr_id = fill(0, num_repeat_net)
+list_acr_id = fill(0, num_S, num_repeat_net)
 
 ## Beginning of the random network search
 for iter_network in 1:num_repeat_net
@@ -103,7 +106,7 @@ for iter_network in 1:num_repeat_net
     source_mat = total_complex[:, list_source_id]
     product_mat = total_complex[:, list_product_id]
     stoi_mat = product_mat - source_mat
-    
+
     # these lines for searching only networks with conservation laws.
     if rank(stoi_mat) == num_S
         continue
@@ -137,7 +140,7 @@ for iter_network in 1:num_repeat_net
     ub_init = 1000 * ones(num_S, 1) # vector of the upper bounds for (randomly generated) initial conditions. 
     lb_init = 10 * ones(num_S, 1) # vector of the lower bounds for (randomly generated) initial conditions. 
 
-    list_acr_id_par = fill(0, num_repeat_par)
+    list_acr_id_par = fill(0, num_S, num_repeat_par)
     for iter_par in 1:num_repeat_par
         for i in 1:num_R
             kappa1[i] = lb_param[i] + (ub_param[i] - lb_param[i]) * rand()
@@ -172,30 +175,29 @@ for iter_network in 1:num_repeat_net
         #plot(sol_mat1[:, 1], sol_mat1[:, 2])
 
         # Find quantiles
-        upp_val = quantile(final_val_mat[1, :], 0.6) # 40th out of 100 for the 1st species
-        low_val = quantile(final_val_mat[1, :], 0.4) # 60th out of 100 for the 1st species
-        # extend the code for all the species not only the 1st species.
-        # upp_val = fill(0, num_S)
-        # low_val = fill(0, num_S)
-        # for i in 1:num_S
-        #     upp_val[i] = quantile(final_val_mat[i, :], 0.6)
-        #     low_val[i] = quantile(final_val_mat[i, :], 0.4)      
-        # end
-        # upp_val = quantile(final_val_mat[1, :], 0.6)
-        # low_val = quantile(final_val_mat[1, :], 0.4)
+        upp_val = fill(0, num_S)
+        low_val = fill(0, num_S)
+        for i in 1:num_S
+            upp_val[i] = quantile(final_val_mat[i, :], 0.6) # 40th out of 100 for the i-th species
+            low_val[i] = quantile(final_val_mat[i, :], 0.4) # 60th out of 100 for the i-th species      
+        end
 
-        if (upp_val - low_val < eps_acr && low_val > thres_positive) # Do we need a positivity criterion for steady states?
-            list_acr_id_par[iter_par] = 1 # 모든 species를 따지려면, list_acr_id_par를 matrix로 바꿔야 함
+        for i in 1:num_S
+            if (upp_val[i] - low_val[i] < eps_acr && low_val[i] > thres_positive) # Do we need a positivity criterion for steady states?
+                list_acr_id_par[i, iter_par] = 1
+            end
         end
     end
-    if (sum(list_acr_id_par) > 0)
-        list_acr_id[iter_network] = list_acr_id[iter_network] + 1  # 모든 species를 따지려면, list_acr_id를 matrix로 바꿔야 함
+    for i in 1:num_S
+    if (sum(list_acr_id_par[i,:]) > 0)
+        list_acr_id[i,iter_network] = list_acr_id[i,iter_network] + 1 
         # partial ACR (ACR for a subset of parameter sets)
     end
-    if (prod(list_acr_id_par) > 0)
-        list_acr_id[iter_network] = list_acr_id[iter_network] + 1 # 모든 species를 따지려면, list_acr_id를 matrix로 바꿔야 함
+    if (prod(list_acr_id_par[i,:]) > 0)
+        list_acr_id[i,iter_network] = list_acr_id[i,iter_network] + 1
         # complete ACR (ACR for a subset of parameter sets)
     end
+end
     matrix_R_id[:, iter_network] = list_R_id
 end
 
@@ -215,7 +217,7 @@ CSV.write(path * "matrix_R_id_S" * string(num_S) * "R" * string(num_R) * ".csv",
 #list_acr_id = xx[:,1]
 #matrix_R_id = Matrix(mm)
 
-net_list_with_acr = findall(list_acr_id .> 0);
+net_list_with_acr = findall(list_acr_id[1,:] .> 0);
 
 for check_net_id in net_list_with_acr ## the code below is now designed for one instance of reaction network not for loop.
 
@@ -223,13 +225,6 @@ for check_net_id in net_list_with_acr ## the code below is now designed for one 
     list_R_id = matrix_R_id[:, check_net_id]
     list_source_id = fill(0, num_R)
     list_product_id = fill(0, num_R)
-
-    source_txt = fill("", num_R)
-    product_txt = fill("", num_R)
-    source_txt_short = fill("", num_R)
-    product_txt_short = fill("", num_R)
-    network_txt = fill("", num_R)
-    network_txt_short = fill("", num_R)
 
     for i in 1:num_R
         sr_i = Int(floor((list_R_id[i] - 1) / (num_C - 1))) + 1
@@ -242,66 +237,17 @@ for check_net_id in net_list_with_acr ## the code below is now designed for one 
     end
     source_mat = total_complex[:, list_source_id]
     product_mat = total_complex[:, list_product_id]
-    
+
     # The code below is the module for "writing down" a reaction network. 
-    # Let's change the below code as a 'function' not lines of code.
-    for i in 1:num_R
-        plus_flag_source = 0 # flag variable for source complexes to decide adding "+" symbol in strings
-        plus_flag_product = 0 # flag variable for product complexes to decide adding "+" symbol in strings
-        for j in 1:num_S
-            # create a long version of strings, e.g., 0A+3B+1C
-            source_txt[i] = source_txt[i] * string(source_mat[j, i]) * string(Char(64 + j))
-            product_txt[i] = product_txt[i] * string(product_mat[j, i]) * string(Char(64 + j))
-            if j < num_S
-                source_txt[i] = source_txt[i] * "+"
-                product_txt[i] = product_txt[i] * "+"
-            end
+    network_txt, network_txt_short = acr.crn_writing(source_mat, product_mat)
 
-            # create a short version of strings, e.g., 3B+C instead of 0A+3B+1C 
-            if source_mat[j, i] > 1
-                source_txt_short[i] = source_txt_short[i] * string(source_mat[j, i]) * string(Char(64 + j))
-                plus_flag_source = 1
-            elseif source_mat[j, i] == 1
-                source_txt_short[i] = source_txt_short[i] * string(Char(64 + j))
-                plus_flag_source = 1
-                # omit "1" for the coefficient, i.e., use "A" instead of "1A"
-            end
-
-            if product_mat[j, i] > 1
-                product_txt_short[i] = product_txt_short[i] * string(product_mat[j, i]) * string(Char(64 + j))
-                plus_flag_product = 1
-            elseif product_mat[j, i] == 1
-                product_txt_short[i] = product_txt_short[i] * string(Char(64 + j))
-                plus_flag_product = 1
-                # omit "1" for the coefficient, i.e., use "A" instead of "1A"
-            end
-            if sum(source_mat[(j+1):end, i]) > 0 && plus_flag_source > 0
-                source_txt_short[i] = source_txt_short[i] * "+" # add "=" symbol if there is anything else to add. 
-                plus_flag_source = 0
-            end
-            if sum(product_mat[(j+1):end, i]) > 0 && plus_flag_product > 0
-                product_txt_short[i] = product_txt_short[i] * "+" # add "=" symbol if there is anything else to add. 
-                plus_flag_product = 0
-            end
-        end
-        if source_txt_short[i] == ""
-            source_txt_short[i] = "0" # add "0" is the source complex of a reaction is the zero complex.
-        end
-        if product_txt_short[i] == ""
-            product_txt_short[i] = "0" # add "0" is the product complex of a reaction is the zero complex.
-        end
-    end
-
-    network_txt = source_txt .* fill(" -> ", num_R) .* product_txt
-    network_txt_short = source_txt_short .* fill(" -> ", num_R) .* product_txt_short
-    
-    println(network_txt_short)
+    # println(network_txt_short)
     # rank(stoi_mat)
     # if rank(stoi_mat) < num_S
     #     println(check_net_id)
     #     break
     # end
-    
+
     # kernel(stoi_mat)
     # L_ker = nullspace(stoi_mat')
     # #L_ker = nullspace(s');
@@ -310,13 +256,6 @@ for check_net_id in net_list_with_acr ## the code below is now designed for one 
     #     # Int.(round.(L_ker_norm))
     # end
 end
-
-source_txt
-product_txt
-source_txt_short
-product_txt_short
-network_txt
-network_txt_short
 
 ## Should set a convergence criterion later.
 # Solve the ODE
@@ -331,3 +270,6 @@ scatter!(final_val_mat[1, :], final_val_mat[2, :], alpha=0.3)
 
 # plot(1:num_repeat_init, final_val_mat[3,:])
 # plot!(1:num_repeat_init, latter_val_mat[3,:])
+a,b = acr.crn_writing(source_mat, source_mat)
+a
+b
