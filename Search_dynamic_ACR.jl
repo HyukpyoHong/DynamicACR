@@ -134,8 +134,8 @@ for iter_network in 1:num_repeat_net
     ub_param = 10 * ones(num_R, 1) # vector of the upper bounds for (randomly generated) rate constants. 
     lb_param = zeros(num_R, 1) # vector of the lower bounds for (randomly generated) rate constants. 
 
-    ub_init = 10 * ones(num_S, 1) # vector of the upper bounds for (randomly generated) initial conditions. 
-    lb_init = zeros(num_S, 1) # vector of the lower bounds for (randomly generated) initial conditions. 
+    ub_init = 1000 * ones(num_S, 1) # vector of the upper bounds for (randomly generated) initial conditions. 
+    lb_init = 10 * ones(num_S, 1) # vector of the lower bounds for (randomly generated) initial conditions. 
 
     list_acr_id_par = fill(0, num_repeat_par)
     for iter_par in 1:num_repeat_par
@@ -174,6 +174,7 @@ for iter_network in 1:num_repeat_net
         # Find quantiles
         upp_val = quantile(final_val_mat[1, :], 0.6) # 40th out of 100 for the 1st species
         low_val = quantile(final_val_mat[1, :], 0.4) # 60th out of 100 for the 1st species
+        # extend the code for all the species not only the 1st species.
 
         if (upp_val - low_val < eps_acr && low_val > thres_positive)
             list_acr_id_par[iter_par] = 1
