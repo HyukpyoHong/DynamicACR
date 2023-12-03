@@ -19,13 +19,9 @@ eps_acr = 0.01 # the threshold value for checking ACR.
 # then we say the network has an ACR for a given parameter set.
 thres_positive = 0.01 # the threshold value for checking positivity of a steady-state value. 
 
-num_S = 3 # number of species
+num_S = 2 # number of species
 max_order = 2 # the maximum order of reaction. e.g, 1: monomolecular, 2:bimolecular, ...
-num_R = 3 # the number of reactions that a random network contains.
-
-num_repeat_net = 5 # the number of random networks that you want to search/check.
-num_repeat_par = 2 # the number of parameter sets that you want to check ACR property.
-num_repeat_init = 10 # the number of initial condition sets for a given fixed parameter set to check ACR property.
+num_R = 2 # the number of reactions that a random network contains.
 
 source_mat = nothing # Initialization of a variable that stores source complexes of a network.
 product_mat = nothing # Initialization of a variable that stores product complexes of a network. 
@@ -71,16 +67,27 @@ total_complex = acr.make_total_complexes(num_S, max_order)
 
 ## Generate a (mono or bimolecular) random network with the given numbers of species and reactions (num_S and num_R)
 num_total_R = num_total_C * (num_total_C - 1)
+num_total_net = binomial(num_total_R, num_R)
+
+num_repeat_net = num_total_net # the number of random networks that you want to search/check.
+num_repeat_par = 2 # the number of parameter sets that you want to check ACR property.
+num_repeat_init = 10 # the number of initial condition sets for a given fixed parameter set to check ACR property.
+
 matrix_R_id = fill(0, num_R, num_repeat_net)
 list_acr_id = fill(0, num_S, num_repeat_net)
-
 ## Beginning of the random network search
+rnd_search = false
 for iter_network in 1:num_repeat_net
-    list_R_id = sample(1:num_total_R, num_R)
+    if rnd_search == true # search networks randomly.
+        list_R_id = sample(1:num_total_R, num_R)
+    else # search networks in order.
+        list_R_id = acr.net_id_to_r_id_list(iter_network, num_total_R, num_R)
+        # The value of num_repeat_net cannot exceed the value of num_total_net in this case.
+    end
     list_source_id = fill(0, num_R)
     list_product_id = fill(0, num_R)
     for i in 1:num_R
-        s_id, p_id = reaction_to_complex(list_R_id[i], num_total_C)
+        s_id, p_id = acr.reaction_to_complex(list_R_id[i], num_total_C)
         list_source_id[i] = s_id
         list_product_id[i] = p_id
     end
@@ -200,7 +207,6 @@ end
 ss1 = acr.crn_embedding(source_mat[1:2,:], product_mat[1:2,:]);
 ss2 = acr.crn_embedding(product_mat, source_mat);
 plot(ss1, ss2, layout = (2,2))
-plot(ss1)
 
 # plot(1:100,2:101)
 
