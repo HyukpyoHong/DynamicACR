@@ -65,12 +65,12 @@ function MAK_rsc(dx, x, kappa, t)
     end
 end
 
-num_C = binomial(max_order + num_S, num_S)
-total_complex = make_total_complexes(num_S, max_order)
+num_total_C = binomial(max_order + num_S, num_S)
+total_complex = acr.make_total_complexes(num_S, max_order)
 # total_complex contains all possible complexes under the max_order (e.g., bimolecular, trimolecular, ...)
 
 ## Generate a (mono or bimolecular) random network with the given numbers of species and reactions (num_S and num_R)
-num_total_R = num_C * (num_C - 1)
+num_total_R = num_total_C * (num_total_C - 1)
 matrix_R_id = fill(0, num_R, num_repeat_net)
 list_acr_id = fill(0, num_S, num_repeat_net)
 
@@ -80,7 +80,7 @@ for iter_network in 1:num_repeat_net
     list_source_id = fill(0, num_R)
     list_product_id = fill(0, num_R)
     for i in 1:num_R
-        s_id, p_id = reaction_to_complex(list_R_id[i], num_C)
+        s_id, p_id = reaction_to_complex(list_R_id[i], num_total_C)
         list_source_id[i] = s_id
         list_product_id[i] = p_id
     end
@@ -168,21 +168,24 @@ CSV.write(path * "matrix_R_id_S" * string(num_S) * "R" * string(num_R) * ".csv",
 # CSV.write(path * "list_acr_id_S" * string(num_S) * "R" * string(num_R) * "_nonfullrank.csv", Tables.table(list_acr_id), writeheader=false)
 # CSV.write(path * "matrix_R_id_S" * string(num_S) * "R" * string(num_R) * "_nonfullrank.csv", Tables.table(matrix_R_id), writeheader=false)
 
+
 # These lines below are for loading saved data
 #xx = CSV.read(path * "list_acr_id_S" * string(num_S) * "R" * string(num_R) * ".csv", DataFrame, header = false)
 #mm = CSV.read(path * "matrix_R_id_S" * string(num_S) * "R" * string(num_R) * ".csv", DataFrame, header = false)
 #list_acr_id = xx[:,1]
 #matrix_R_id = Matrix(mm)
 
-net_list_with_acr = findall(list_acr_id[1, :] .> 0);
+# net_list_with_acr = findall(list_acr_id[1, :] .> 0);
+net_list_with_acr = findall(list_acr_id .> 0);
 
 for check_net_id in net_list_with_acr ## the code below is now designed for one instance of reaction network not for loop.
     #check_net_id = net_list_with_acr[5]
+    check_net_id = 3
     list_R_id = matrix_R_id[:, check_net_id]
     list_source_id = fill(0, num_R)
     list_product_id = fill(0, num_R)
     for i in 1:num_R
-        s_id, p_id = reaction_to_complex(list_R_id[i], num_C)
+        s_id, p_id = acr.reaction_to_complex(list_R_id[i], num_total_C)
         list_source_id[i] = s_id
         list_product_id[i] = p_id
     end
@@ -190,13 +193,16 @@ for check_net_id in net_list_with_acr ## the code below is now designed for one 
     product_mat = total_complex[:, list_product_id]
 
     # The function below is for "writing down" a reaction network. 
-    network_txt, network_txt_short = acr.crn_writing(source_mat, product_mat)
+    network_txt, network_txt_short = acr.crn_writing(source_mat, product_mat);
 end
 
 
-ss1 = acr.crn_embedding(source_mat, product_mat);
+ss1 = acr.crn_embedding(source_mat[1:2,:], product_mat[1:2,:]);
 ss2 = acr.crn_embedding(product_mat, source_mat);
 plot(ss1, ss2, layout = (2,2))
+plot(ss1)
+
+# plot(1:100,2:101)
 
 ## Should set a convergence criterion later.
 # Solve the ODE

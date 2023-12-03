@@ -80,7 +80,7 @@ function crn_embedding(source_mat, product_mat)
             plot!([source_mat[1, i], product_mat[1, i]],
                 [source_mat[2, i], product_mat[2, i]],
                 [source_mat[3, i], product_mat[3, i]],
-                arrow=true, color=:black, linewidth=2, label="")
+                arrow=true, color=:black, linewidth=2, label="") # Warning: arrows do not appear for a 3D drawing. 
         end
     else
         println("Visualization is possible only when the number of species is either 2 or 3")
@@ -90,11 +90,11 @@ function crn_embedding(source_mat, product_mat)
 end
 
 function make_total_complexes(num_S, max_order)
-    num_C = binomial(max_order + num_S, num_S)
+    num_total_C = binomial(max_order + num_S, num_S)
     tmp_cmplx = fill(0, num_S)
-    total_complex = fill(0, num_S, num_C)
+    total_complex = fill(0, num_S, num_total_C)
 
-    for i in 1:num_C
+    for i in 1:num_total_C
         for j in 1:num_S
             if sum(tmp_cmplx) > max_order
                 tmp_cmplx[j] = 0
@@ -107,9 +107,9 @@ function make_total_complexes(num_S, max_order)
     return total_complex
 end
 
-function reaction_to_complex(r_id, num_C)
-    source_id = Int(floor((r_id - 1) / (num_C - 1))) + 1
-    product_id = mod((r_id - 1), (num_C - 1)) + 1
+function reaction_to_complex(r_id, num_total_C)
+    source_id = Int(floor((r_id - 1) / (num_total_C - 1))) + 1
+    product_id = mod((r_id - 1), (num_total_C - 1)) + 1
     if source_id <= product_id
         product_id = product_id + 1
     end
