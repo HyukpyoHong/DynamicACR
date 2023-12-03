@@ -83,7 +83,7 @@ function crn_embedding(source_mat, product_mat)
                 arrow=true, color=:black, linewidth=2, label="") # Warning: arrows do not appear for a 3D drawing. 
         end
     else
-        println("Visualization is possible only when the number of species is either 2 or 3")
+        @warn "Visualization is possible only when the number of species is either 2 or 3. 'nothing' has been returnded"
         return nothing
     end
     return p
@@ -116,4 +116,35 @@ function reaction_to_complex(r_id, num_total_C)
     return source_id, product_id
 end
 
+function net_id_to_r_id_list(net_id, num_total_R, num_R)
+    tmp_id = net_id
+    reaction_id_list = fill(0, num_R) # the list contains the id for reaction r_1, r_2, ..., r_{num_R}.
+    # Those id's have to satisfy 1 <= r_1 < r_2 < ... < r_{num_R} <= num_total_R.
+    if net_id > binomial(num_total_R, num_R) || net_id < 1
+        @warn "The given network id must be between 1 and binomial(num_total_R, num_R). 'nothing' has been returnded."
+        return nothing
+    end
+    # Determine the first reaction id, r_1.
+    for j in 1:(num_total_R-num_R+1)
+        tmp_id = tmp_id - binomial(num_total_R - j, num_R - 1)
+        if tmp_id <= 0
+            tmp_id = tmp_id + binomial(num_total_R - j, num_R - 1)
+            reaction_id_list[1] = j
+            break
+        end
+    end
+
+    # Determine the second to last reactions id, r_2, r_3, ... , r_{num_R}.
+    for i in 2:num_R
+        for j in (reaction_id_list[i-1]+1):(num_total_R-num_R+i)
+            tmp_id = tmp_id - binomial(num_total_R - j, num_R - i)
+            if tmp_id <= 0
+                tmp_id = tmp_id + binomial(num_total_R - j, num_R - i)
+                reaction_id_list[i] = j
+                break
+            end
+        end
+    end
+    return reaction_id_list
+end
 end
