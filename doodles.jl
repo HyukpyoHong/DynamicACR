@@ -33,7 +33,7 @@ sol2 = solve(prob)
 t = sol.t
 c = sol.u
 # Plot the results
-plot(sol)
+# plot(sol)
 #plot([1,2], [2,3])
 
 
@@ -45,8 +45,6 @@ end
 # Call the function with keyword arguments
 example_function(10, z=5)
 methods(example_function)
-example_function()
-
 
 x = nothing
 y = 0 

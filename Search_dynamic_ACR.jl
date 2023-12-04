@@ -10,6 +10,7 @@ using DataFrames
 using DifferentialEquations
 using Interpolations
 using Plots
+using Printf
 # using PlotlyJS
 using StatsBase, Statistics, Distributions
 using LinearAlgebra
@@ -21,7 +22,7 @@ thres_positive = 0.01 # the threshold value for checking positivity of a steady-
 
 num_S = 2 # number of species
 max_order = 2 # the maximum order of reaction. e.g, 1: monomolecular, 2:bimolecular, ...
-num_R = 2 # the number of reactions that a random network contains.
+num_R = 3 # the number of reactions that a random network contains.
 
 source_mat = nothing # Initialization of a variable that stores source complexes of a network.
 product_mat = nothing # Initialization of a variable that stores product complexes of a network. 
@@ -58,6 +59,7 @@ function MAK_rsc(dx, x, kappa, t)
 
     for i in 1:length(x)
         dx[i] = dx_vec[i] / (1 + sqrt(sum(dx_vec .^ 2)))
+        # Here, it would be better to change the constant term 1 in the denominator to 0.1 or 0.01 to speed up the convergence of ODEs.
     end
 end
 
@@ -70,14 +72,17 @@ num_total_R = num_total_C * (num_total_C - 1)
 num_total_net = binomial(num_total_R, num_R)
 
 num_repeat_net = num_total_net # the number of random networks that you want to search/check.
-num_repeat_par = 2 # the number of parameter sets that you want to check ACR property.
-num_repeat_init = 10 # the number of initial condition sets for a given fixed parameter set to check ACR property.
+num_repeat_par = 5 # the number of parameter sets that you want to check ACR property.
+num_repeat_init = 20 # the number of initial condition sets for a given fixed parameter set to check ACR property.
 
 matrix_R_id = fill(0, num_R, num_repeat_net)
 list_acr_id = fill(0, num_S, num_repeat_net)
 ## Beginning of the random network search
 rnd_search = false
 for iter_network in 1:num_repeat_net
+    if mod(iter_network, 10) == 1
+        @printf("======= Analyzing network %4d =======\n", iter_network)
+    end
     if rnd_search == true # search networks randomly.
         list_R_id = sample(1:num_total_R, num_R)
     else # search networks in order.
@@ -103,13 +108,13 @@ for iter_network in 1:num_repeat_net
     ## simulation settings: initial conditions, parameters, and the time interval.
     kappa1 = zeros(num_R, 1) # vector of rate constants. It must be a column vector.
     x_init = zeros(num_S, 1) # vector of initial conditions. It must be a column vector.
-    tspan1 = (0.0, 30.0) # time interval
+    tspan1 = (0.0, 50.0) # time interval
 
     ub_param = 10 * ones(num_R, 1) # vector of the upper bounds for (randomly generated) rate constants. 
     lb_param = zeros(num_R, 1) # vector of the lower bounds for (randomly generated) rate constants. 
 
-    ub_init = 1000 * ones(num_S, 1) # vector of the upper bounds for (randomly generated) initial conditions. 
-    lb_init = 10 * ones(num_S, 1) # vector of the lower bounds for (randomly generated) initial conditions. 
+    ub_init = 20 * ones(num_S, 1) # vector of the upper bounds for (randomly generated) initial conditions. 
+    lb_init = 1 * ones(num_S, 1) # vector of the lower bounds for (randomly generated) initial conditions. 
 
     list_acr_id_par = fill(0, num_S, num_repeat_par) # (i,j)-entry is 1 if the i-th species shows the dynamic ACR under the j-th parameter set.
     for iter_par in 1:num_repeat_par
@@ -169,12 +174,11 @@ end
 list_acr_id
 matrix_R_id
 path = "/Users/hyukpyohong/Dropbox/CRN_dynamicACR/Codes/"
-CSV.write(path * "list_acr_id_S" * string(num_S) * "R" * string(num_R) * ".csv", Tables.table(list_acr_id), writeheader=false)
-CSV.write(path * "matrix_R_id_S" * string(num_S) * "R" * string(num_R) * ".csv", Tables.table(matrix_R_id), writeheader=false)
+CSV.write(path * "list_acr_id_S" * string(num_S) * "R" * string(num_R) * "_max_ord" * string(max_order) * ".csv", Tables.table(list_acr_id), writeheader=false)
+CSV.write(path * "matrix_R_id_S" * string(num_S) * "R" * string(num_R) * "_max_ord" * string(max_order) * ".csv", Tables.table(matrix_R_id), writeheader=false)
 
 # CSV.write(path * "list_acr_id_S" * string(num_S) * "R" * string(num_R) * "_nonfullrank.csv", Tables.table(list_acr_id), writeheader=false)
 # CSV.write(path * "matrix_R_id_S" * string(num_S) * "R" * string(num_R) * "_nonfullrank.csv", Tables.table(matrix_R_id), writeheader=false)
-
 
 # These lines below are for loading saved data
 #xx = CSV.read(path * "list_acr_id_S" * string(num_S) * "R" * string(num_R) * ".csv", DataFrame, header = false)
@@ -204,20 +208,12 @@ for check_net_id in net_list_with_acr ## the code below is now designed for one 
 end
 
 
-ss1 = acr.crn_embedding(source_mat[1:2,:], product_mat[1:2,:]);
-ss2 = acr.crn_embedding(product_mat, source_mat);
-plot(ss1, ss2, layout = (2,2))
-
-# plot(1:100,2:101)
-
 ## Should set a convergence criterion later.
 # Solve the ODE
-plot(1:num_repeat_init, final_val_mat[1, :],
-    xtickfont=12, ytickfont=12, linewidth=2)
-plot!(1:num_repeat_init, latter_val_mat[1, :], linewidth=2)
-plot(1:num_repeat_init, final_val_mat[2, :],
-    xtickfont=12, ytickfont=12, linewidth=2)
-plot!(1:num_repeat_init, latter_val_mat[2, :], linewidth=2)
+# plot(1:num_repeat_init, final_val_mat[1, :],
+#     xtickfont=12, ytickfont=12, linewidth=2)
+# plot!(1:num_repeat_init, latter_val_mat[1, :], linewidth=2)
+# plot(1:num_repeat_init, final_val_mat[2, :],
+#     xtickfont=12, ytickfont=12, linewidth=2)
+# plot!(1:num_repeat_init, latter_val_mat[2, :], linewidth=2)
 
-source_mat = zeros(3,0)
-source_mat = hcat(source_mat, [1;2;3])
