@@ -77,6 +77,7 @@ num_repeat_init = 20 # the number of initial condition sets for a given fixed pa
 
 matrix_R_id = fill(0, num_R, num_repeat_net)
 list_acr_id = fill(0, num_S, num_repeat_net)
+list_unbnd_id = fill(0, num_S, num_repeat_net)
 ## Beginning of the random network search
 rnd_search = false
 for iter_network in 1:num_repeat_net
@@ -112,6 +113,7 @@ for iter_network in 1:num_repeat_net
     lb_init = 1 * ones(num_S, 1) # vector of the lower bounds for (randomly generated) initial conditions. 
 
     list_acr_id_par = fill(0, num_S, num_repeat_par) # (i,j)-entry is 1 if the i-th species shows the dynamic ACR under the j-th parameter set.
+    list_unbnd_id_par = fill(0, num_S, num_repeat_par) # (i,j)-entry is 1 if the i-th species shows an unbounded trajectory under the j-th parameter set.
     for iter_par in 1:num_repeat_par
         for i in 1:num_R
             kappa1[i] = lb_param[i] + (ub_param[i] - lb_param[i]) * rand()
@@ -138,7 +140,7 @@ for iter_network in 1:num_repeat_net
                 latter_val_mat[:, iter_init] = sol_mat1[Int(floor(0.8 * length_tspan)), :]
             end
         end
-
+        
         # Find quantiles
         upp_val = zeros(num_S)
         low_val = zeros(num_S)
@@ -151,8 +153,12 @@ for iter_network in 1:num_repeat_net
             if (upp_val[i] - low_val[i] < eps_acr && low_val[i] > thres_positive) # Do we need a positivity criterion for steady states?
                 list_acr_id_par[i, iter_par] = 1
             end
+            if mean(latter_val_mat[i, :]) > ub_init[i] && mean(final_val_mat[i, :]) > mean(latter_val_mat[i, :]) + 2
+                list_unbnd_id_par[i, iter_par] = 1
+            end
         end
     end
+
     for i in 1:num_S
         if (sum(list_acr_id_par[i, :]) > 0)
             list_acr_id[i, iter_network] = list_acr_id[i, iter_network] + 1
@@ -160,14 +166,24 @@ for iter_network in 1:num_repeat_net
         end
         if (prod(list_acr_id_par[i, :]) > 0)
             list_acr_id[i, iter_network] = list_acr_id[i, iter_network] + 1
-            # complete ACR (ACR for a subset of parameter sets)
+            # complete ACR (ACR for all parameter sets)
+        end
+        if (sum(list_unbnd_id_par[i, :]) > 0)
+            list_unbnd_id[i, iter_network] = list_acr_id[i, iter_network] + 1
+            # partial unboundedness (unboundedness for a subset of parameter sets)
+        end
+        if (prod(list_unbnd_id_par[i, :]) > 0)
+            list_unbnd_id[i, iter_network] = list_acr_id[i, iter_network] + 1
+            # complete unboundedness (unboundedness for all parameter sets)
         end
     end
     matrix_R_id[:, iter_network] = list_R_id
 end
 
 list_acr_id
+list_unbnd_id
 matrix_R_id
 path = "/Users/hyukpyohong/Dropbox/CRN_dynamicACR/Codes/data/"
 CSV.write(path * "list_acr_id_S" * string(num_S) * "R" * string(num_R) * "_max_ord" * string(max_order) * ".csv", Tables.table(list_acr_id), writeheader=false)
+CSV.write(path * "list_unbnd_id_S" * string(num_S) * "R" * string(num_R) * "_max_ord" * string(max_order) * ".csv", Tables.table(list_unbnd_id), writeheader=false)
 CSV.write(path * "matrix_R_id_S" * string(num_S) * "R" * string(num_R) * "_max_ord" * string(max_order) * ".csv", Tables.table(matrix_R_id), writeheader=false)

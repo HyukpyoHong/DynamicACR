@@ -103,14 +103,17 @@ function crn_embedding(source_mat, product_mat; shake=true)
     return p
 end
 
-function crn_embedding_info(source_mat, product_mat, acr_id; shake=true)
+function crn_embedding_info(source_mat, product_mat, acr_id, unbnd_id; shake=true)
     num_S, num_R = size(source_mat)
     maxlim = 2 #float(maximum(hcat(source_mat, product_mat)))
     acr_id_tf = acr_id .> 0
+    unbnd_id_tf = unbnd_id .> 0
     r = rank(product_mat - source_mat)
     if num_S == 2
         text_id = acr_id_tf[1] * 1 + acr_id_tf[2] * 2 + 1
         acr_sp = ["∅" "A" "B" "A,B"][text_id]
+        text_id = unbnd_id_tf[1] * 1 + unbnd_id_tf[2] * 2 + 1
+        unbnd_sp = ["∅" "A" "B" "A,B"][text_id]
         #p = plot([0.0 maxlim], [0.0 maxlim], xlabel="A", ylabel="B", legend=false, title="ACR: " * acr_sp * "\ndim(S)=" * string(r))
         p = plot([0.0 maxlim], [0.0 maxlim], xlabel="A", ylabel="B", legend=false)
         for i in 1:num_R
@@ -125,10 +128,12 @@ function crn_embedding_info(source_mat, product_mat, acr_id; shake=true)
                 arrow=true, color=:black, linewidth=1.5)
         end
         #annotate!(1.7,1.7,"ACR: " * acr_sp * "\ndim(S)=" * string(r))
-        annotate!((1.7, 1.7, text("ACR: " * acr_sp * "\ndim(S)=" * string(r), 10)))
+        annotate!((1.25, 1.7, text("ACR: " * acr_sp * "\nUnb: " * unbnd_sp * "\ndim(S)=" * string(r), 9)))
     elseif num_S == 3
         text_id = acr_id_tf[1] * 1 + acr_id_tf[2] * 2 + acr_id_tf[3] * 4 + 1
         acr_sp = ["∅" "A" "B" "A,B" "C" "A,C" "B,C" "A,B,C"][text_id]
+        text_id = unbnd_id_tf[1] * 1 + unbnd_id_tf[2] * 2 + unbnd_id_tf[3] * 4 + 1
+        unbnd_sp = ["∅" "A" "B" "A,B" "C" "A,C" "B,C" "A,B,C"][text_id]
         #p = plot([0.0 maxlim], [0.0 maxlim], [0.0 maxlim], xlabel="A", ylabel="B", zlabel="C", legend=false, title="ACR: " * acr_sp * "\ndim(S)=" * string(r))
         p = plot([0.0 maxlim], [0.0 maxlim], [0.0 maxlim], xlabel="A", ylabel="B", zlabel="C", legend=false)
         for i in 1:num_R
@@ -144,7 +149,7 @@ function crn_embedding_info(source_mat, product_mat, acr_id; shake=true)
                 arrow=true, color=:black, linewidth=1.5) # Warning: arrows do not appear for a 3D drawing. 
         end
         #annotate!(1.7,1.7,1.7,"ACR: " * acr_sp * "\ndim(S)=" * string(r))
-        annotate!((1.7, 1.7, 1.7, text("ACR: " * acr_sp * "\ndim(S)=" * string(r), 10)))
+        annotate!((1.7, 1.7, 1.7, text("ACR: " * acr_sp * "\nUnb: " * unbnd_sp * "\ndim(S)=" * string(r), 9)))
     else
         @warn "Visualization is possible only when the number of species is either 2 or 3. 'nothing' has been returnded"
         return nothing
