@@ -3,7 +3,7 @@ import .source_ACR as acr
 
 ## Initialization
 # pakages
-# Pkg.add()
+# Pkg.add("Plots")
 using Pkg
 using CSV
 using DataFrames
@@ -100,11 +100,6 @@ for iter_network in 1:num_repeat_net
     product_mat = total_complex[:, list_product_id]
     stoi_mat = product_mat - source_mat # stoichiometry matrix
 
-    # these lines for searching only networks with conservation laws.
-    # if rank(stoi_mat) == num_S
-    #     continue
-    # end
-
     ## simulation settings: initial conditions, parameters, and the time interval.
     kappa1 = zeros(num_R, 1) # vector of rate constants. It must be a column vector.
     x_init = zeros(num_S, 1) # vector of initial conditions. It must be a column vector.
@@ -173,47 +168,6 @@ end
 
 list_acr_id
 matrix_R_id
-path = "/Users/hyukpyohong/Dropbox/CRN_dynamicACR/Codes/"
+path = "/Users/hyukpyohong/Dropbox/CRN_dynamicACR/Codes/data/"
 CSV.write(path * "list_acr_id_S" * string(num_S) * "R" * string(num_R) * "_max_ord" * string(max_order) * ".csv", Tables.table(list_acr_id), writeheader=false)
 CSV.write(path * "matrix_R_id_S" * string(num_S) * "R" * string(num_R) * "_max_ord" * string(max_order) * ".csv", Tables.table(matrix_R_id), writeheader=false)
-
-# CSV.write(path * "list_acr_id_S" * string(num_S) * "R" * string(num_R) * "_nonfullrank.csv", Tables.table(list_acr_id), writeheader=false)
-# CSV.write(path * "matrix_R_id_S" * string(num_S) * "R" * string(num_R) * "_nonfullrank.csv", Tables.table(matrix_R_id), writeheader=false)
-
-# These lines below are for loading saved data
-#xx = CSV.read(path * "list_acr_id_S" * string(num_S) * "R" * string(num_R) * ".csv", DataFrame, header = false)
-#mm = CSV.read(path * "matrix_R_id_S" * string(num_S) * "R" * string(num_R) * ".csv", DataFrame, header = false)
-#list_acr_id = xx[:,1]
-#matrix_R_id = Matrix(mm)
-
-# net_list_with_acr = findall(list_acr_id[1, :] .> 0);
-net_list_with_acr = findall(list_acr_id .> 0);
-
-for check_net_id in net_list_with_acr ## the code below is now designed for one instance of reaction network not for loop.
-    #check_net_id = net_list_with_acr[5]
-    check_net_id = 3
-    list_R_id = matrix_R_id[:, check_net_id]
-    list_source_id = fill(0, num_R)
-    list_product_id = fill(0, num_R)
-    for i in 1:num_R
-        s_id, p_id = acr.reaction_to_complex(list_R_id[i], num_total_C)
-        list_source_id[i] = s_id
-        list_product_id[i] = p_id
-    end
-    source_mat = total_complex[:, list_source_id]
-    product_mat = total_complex[:, list_product_id]
-
-    # The function below is for "writing down" a reaction network. 
-    network_txt, network_txt_short = acr.crn_writing(source_mat, product_mat);
-end
-
-
-## Should set a convergence criterion later.
-# Solve the ODE
-# plot(1:num_repeat_init, final_val_mat[1, :],
-#     xtickfont=12, ytickfont=12, linewidth=2)
-# plot!(1:num_repeat_init, latter_val_mat[1, :], linewidth=2)
-# plot(1:num_repeat_init, final_val_mat[2, :],
-#     xtickfont=12, ytickfont=12, linewidth=2)
-# plot!(1:num_repeat_init, latter_val_mat[2, :], linewidth=2)
-

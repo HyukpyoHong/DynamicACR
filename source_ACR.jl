@@ -1,5 +1,6 @@
 module source_ACR
-using Plots: plot, plot!
+using Plots
+using LinearAlgebra
 
 function crn_writing(source_mat, product_mat)
     num_S, num_R = size(source_mat)
@@ -65,23 +66,85 @@ function crn_writing(source_mat, product_mat)
 
 end
 
-function crn_embedding(source_mat, product_mat)
+function crn_embedding(source_mat, product_mat; shake=true)
     num_S, num_R = size(source_mat)
+    maxlim = 2 #float(maximum(hcat(source_mat, product_mat)))
     if num_S == 2
-        p = plot([0.0 3.0], [0.0 3.0])
+        p = plot([0.0 maxlim], [0.0 maxlim], xlabel="A", ylabel="B", legend=false)
         for i in 1:num_R
-            plot!([source_mat[1, i], product_mat[1, i]],
-                [source_mat[2, i], product_mat[2, i]],
-                arrow=true, color=:black, linewidth=2, label="")
+            if shake == true
+                move = rand(num_S) * 0.1 .- 0.05
+                #move = randn(num_S) * 0.05
+            else
+                move = fill(0.0, num_S)
+            end
+            plot!([source_mat[1, i] + move[1], product_mat[1, i] + move[1]],
+                [source_mat[2, i] + move[2], product_mat[2, i] + move[2]],
+                arrow=true, color=:black, linewidth=1.5)
         end
     elseif num_S == 3
-        p = plot([0.0 3.0], [0.0 3.0], [0.0 3.0])
+        p = plot([0.0 maxlim], [0.0 maxlim], [0.0 maxlim], xlabel="A", ylabel="B", zlabel="C", legend=false)
         for i in 1:num_R
-            plot!([source_mat[1, i], product_mat[1, i]],
-                [source_mat[2, i], product_mat[2, i]],
-                [source_mat[3, i], product_mat[3, i]],
-                arrow=true, color=:black, linewidth=2, label="") # Warning: arrows do not appear for a 3D drawing. 
+            if shake == true
+                move = rand(num_S) * 0.1 .- 0.05
+                #move = randn(num_S) * 0.05
+            else
+                move = fill(0.0, num_S)
+            end
+            plot!([source_mat[1, i] + move[1], product_mat[1, i] + move[1]],
+                [source_mat[2, i] + move[2], product_mat[2, i] + move[2]],
+                [source_mat[3, i] + move[3], product_mat[3, i] + move[3]],
+                arrow=true, color=:black, linewidth=1.5) # Warning: arrows do not appear for a 3D drawing. 
         end
+    else
+        @warn "Visualization is possible only when the number of species is either 2 or 3. 'nothing' has been returnded"
+        return nothing
+    end
+    return p
+end
+
+function crn_embedding_info(source_mat, product_mat, acr_id; shake=true)
+    num_S, num_R = size(source_mat)
+    maxlim = 2 #float(maximum(hcat(source_mat, product_mat)))
+    acr_id_tf = acr_id .> 0
+    r = rank(product_mat - source_mat)
+    if num_S == 2
+        text_id = acr_id_tf[1] * 1 + acr_id_tf[2] * 2 + 1
+        acr_sp = ["∅" "A" "B" "A,B"][text_id]
+        #p = plot([0.0 maxlim], [0.0 maxlim], xlabel="A", ylabel="B", legend=false, title="ACR: " * acr_sp * "\ndim(S)=" * string(r))
+        p = plot([0.0 maxlim], [0.0 maxlim], xlabel="A", ylabel="B", legend=false)
+        for i in 1:num_R
+            if shake == true
+                move = rand(num_S) * 0.1 .- 0.05
+                #move = randn(num_S) * 0.05
+            else
+                move = fill(0.0, num_S)
+            end
+            plot!([source_mat[1, i] + move[1], product_mat[1, i] + move[1]],
+                [source_mat[2, i] + move[2], product_mat[2, i] + move[2]],
+                arrow=true, color=:black, linewidth=1.5)
+        end
+        #annotate!(1.7,1.7,"ACR: " * acr_sp * "\ndim(S)=" * string(r))
+        annotate!((1.7, 1.7, text("ACR: " * acr_sp * "\ndim(S)=" * string(r), 10)))
+    elseif num_S == 3
+        text_id = acr_id_tf[1] * 1 + acr_id_tf[2] * 2 + acr_id_tf[3] * 4 + 1
+        acr_sp = ["∅" "A" "B" "A,B" "C" "A,C" "B,C" "A,B,C"][text_id]
+        #p = plot([0.0 maxlim], [0.0 maxlim], [0.0 maxlim], xlabel="A", ylabel="B", zlabel="C", legend=false, title="ACR: " * acr_sp * "\ndim(S)=" * string(r))
+        p = plot([0.0 maxlim], [0.0 maxlim], [0.0 maxlim], xlabel="A", ylabel="B", zlabel="C", legend=false)
+        for i in 1:num_R
+            if shake == true
+                move = rand(num_S) * 0.1 .- 0.05
+                #move = randn(num_S) * 0.05
+            else
+                move = fill(0.0, num_S)
+            end
+            plot!([source_mat[1, i] + move[1], product_mat[1, i] + move[1]],
+                [source_mat[2, i] + move[2], product_mat[2, i] + move[2]],
+                [source_mat[3, i] + move[3], product_mat[3, i] + move[3]],
+                arrow=true, color=:black, linewidth=1.5) # Warning: arrows do not appear for a 3D drawing. 
+        end
+        #annotate!(1.7,1.7,1.7,"ACR: " * acr_sp * "\ndim(S)=" * string(r))
+        annotate!((1.7, 1.7, 1.7, text("ACR: " * acr_sp * "\ndim(S)=" * string(r), 10)))
     else
         @warn "Visualization is possible only when the number of species is either 2 or 3. 'nothing' has been returnded"
         return nothing
