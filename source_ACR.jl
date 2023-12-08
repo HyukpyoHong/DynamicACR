@@ -43,19 +43,19 @@ function crn_writing(source_mat, product_mat)
                 # omit "1" for the coefficient, i.e., use "A" instead of "1A"
             end
             if sum(source_mat[(j+1):end, i]) > 0 && plus_flag_source > 0
-                source_txt_short[i] = source_txt_short[i] * "+" # add "=" symbol if there is anything else to add. 
+                source_txt_short[i] = source_txt_short[i] * "+" # add "+" symbol if there is anything else to add. 
                 plus_flag_source = 0
             end
             if sum(product_mat[(j+1):end, i]) > 0 && plus_flag_product > 0
-                product_txt_short[i] = product_txt_short[i] * "+" # add "=" symbol if there is anything else to add. 
+                product_txt_short[i] = product_txt_short[i] * "+" # add "+" symbol if there is anything else to add. 
                 plus_flag_product = 0
             end
         end
         if source_txt_short[i] == ""
-            source_txt_short[i] = "0" # add "0" is the source complex of a reaction is the zero complex.
+            source_txt_short[i] = "0" # add "0" if the source complex of a reaction is the zero complex.
         end
         if product_txt_short[i] == ""
-            product_txt_short[i] = "0" # add "0" is the product complex of a reaction is the zero complex.
+            product_txt_short[i] = "0" # add "0" if the product complex of a reaction is the zero complex.
         end
     end
 
@@ -97,7 +97,7 @@ function crn_embedding(source_mat, product_mat; shake=true)
                 arrow=true, color=:black, linewidth=1.5) # Warning: arrows do not appear for a 3D drawing. 
         end
     else
-        @warn "Visualization is possible only when the number of species is either 2 or 3. 'nothing' has been returnded"
+        @warn "Visualization is possible only when the number of species is either 2 or 3. 'nothing' is returned"
         return nothing
     end
     return p
@@ -151,10 +151,37 @@ function crn_embedding_info(source_mat, product_mat, acr_id, unbnd_id; shake=tru
         #annotate!(1.7,1.7,1.7,"ACR: " * acr_sp * "\ndim(S)=" * string(r))
         annotate!((1.7, 1.7, 1.7, text("ACR: " * acr_sp * "\nUnb: " * unbnd_sp * "\ndim(S)=" * string(r), 9)))
     else
-        @warn "Visualization is possible only when the number of species is either 2 or 3. 'nothing' has been returnded"
+        @warn "Visualization is possible only when the number of species is either 2 or 3. 'nothing' is returned"
         return nothing
     end
     return p
+end
+
+function grouping_network(source_mat, product_mat, acr_id, unbnd_id)
+    num_S = size(source_mat)[1]
+    acr_id_tf = acr_id .> 0
+    unbnd_id_tf = unbnd_id .> 0
+    r = rank(product_mat - source_mat)
+    gp = nothing
+    if num_S == 2
+        text_id_acr = acr_id_tf[1] * 1 + acr_id_tf[2] * 2 + 1
+        acr_sp = ["∅" "A" "B" "A,B"][text_id_acr]
+        text_id_unbnd = unbnd_id_tf[1] * 1 + unbnd_id_tf[2] * 2 + 1
+        unbnd_sp = ["∅" "A" "B" "A,B"][text_id_unbnd]
+        if text_id_acr == 1 # no ACR
+            gp = 1
+        elseif text_id_acr == 2 # ACR species: A
+            gp = 4*(r-1) + text_id_unbnd + 1
+        elseif text_id_acr == 3 # ACR species: B
+            gp = 4*(r-1) + text_id_unbnd + 9
+        else # text_id_acr == 4 # ACR species: A, B
+            gp = 4*(r-1) + text_id_unbnd + 17
+        end
+    else
+        @warn "Grouping network is currently possible only when the number of species is either 2. 'nothing' is returnded"
+        return nothing
+    end
+    return gp
 end
 
 function make_total_complexes(num_S, max_order)
@@ -189,7 +216,7 @@ function net_id_to_r_id_list(net_id, num_total_R, num_R)
     reaction_id_list = fill(0, num_R) # the list contains the id for reaction r_1, r_2, ..., r_{num_R}.
     # Those id's have to satisfy 1 <= r_1 < r_2 < ... < r_{num_R} <= num_total_R.
     if net_id > binomial(num_total_R, num_R) || net_id < 1
-        @warn "The given network id must be between 1 and binomial(num_total_R, num_R). 'nothing' has been returnded."
+        @warn "The given network id must be between 1 and binomial(num_total_R, num_R). 'nothing' is returned."
         return nothing
     end
     # Determine the first reaction id, r_1.
@@ -216,3 +243,4 @@ function net_id_to_r_id_list(net_id, num_total_R, num_R)
     return reaction_id_list
 end
 end
+

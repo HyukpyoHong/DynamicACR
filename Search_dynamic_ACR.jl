@@ -187,3 +187,4 @@ path = "/Users/hyukpyohong/Dropbox/CRN_dynamicACR/Codes/data/"
 CSV.write(path * "list_acr_id_S" * string(num_S) * "R" * string(num_R) * "_max_ord" * string(max_order) * ".csv", Tables.table(list_acr_id), writeheader=false)
 CSV.write(path * "list_unbnd_id_S" * string(num_S) * "R" * string(num_R) * "_max_ord" * string(max_order) * ".csv", Tables.table(list_unbnd_id), writeheader=false)
 CSV.write(path * "matrix_R_id_S" * string(num_S) * "R" * string(num_R) * "_max_ord" * string(max_order) * ".csv", Tables.table(matrix_R_id), writeheader=false)
+

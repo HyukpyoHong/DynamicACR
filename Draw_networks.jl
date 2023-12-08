@@ -31,7 +31,11 @@ num_total_net = size(list_acr_id)[2]
 # num_total_net = binomial(num_total_R, num_R)
 
 
+# p_arr_2s2r = Array{Plots.Plot{Plots.GRBackend},1}(undef, num_total_net)
+# gp_list_2s2r = fill(0, num_total_net)
+
 p_arr_2s3r = Array{Plots.Plot{Plots.GRBackend},1}(undef, num_total_net)
+gp_list_2s3r = fill(0, num_total_net)
 for check_net_id in 1:num_total_net ## the code below is now designed for one instance of reaction network not for loop.
     if mod(check_net_id, 10) == 1
         @printf("======= Drawing network %4d =======\n", check_net_id)
@@ -52,52 +56,78 @@ for check_net_id in 1:num_total_net ## the code below is now designed for one in
     # The function below is for drawing a reaction network. 
     acr_id = list_acr_id[:, check_net_id]
     unbnd_id = list_unbnd_id[:, check_net_id]
+
+    # p_arr_2s2r[check_net_id] = acr.crn_embedding_info(source_mat, product_mat, acr_id, unbnd_id)
     p_arr_2s3r[check_net_id] = acr.crn_embedding_info(source_mat, product_mat, acr_id, unbnd_id)
+
+    # gp_list_2s2r[check_net_id] = acr.grouping_network(source_mat, product_mat, acr_id, unbnd_id)
+    gp_list_2s3r[check_net_id] = acr.grouping_network(source_mat, product_mat, acr_id, unbnd_id)
 end
 
 path = "/Users/hyukpyohong/Dropbox/CRN_dynamicACR/Codes/plots/"
 
-layout1 = (3,4)
-num_grid = prod(layout1)
-blank = plot()
+layout1 = (3, 4)
+num_grid = prod(layout1);
+blank = plot();
 
 # This code is for making the number of plot be a multiple of the number of grid.
 
-#p_arr = p_arr_2s2r
-#p_arr = p_arr_2s3r
-
-tmp1 = length(p_arr)
-if mod(tmp1, num_grid) != 0
-    for i in 1:(num_grid-mod(tmp1, num_grid))
-        push!(p_arr, blank)
-    end
+# p_arr = p_arr_2s2r
+p_arr_total = p_arr_2s3r
+gp_size_check_2s2r = fill(0, 25)
+gp_size_check_2s3r = fill(0, 25)
+gp_list_2s2r
+gp_list_2s3r
+for i in gp_list_2s2r
+    gp_size_check_2s2r[i] += 1
 end
 
-num_paper = Int(length(p_arr) / num_grid)
-for iter_paper in 1:num_paper
-    if mod(iter_paper, 10) == 1
-        @printf("======= Drawing paper sheet %4d =======\n", iter_paper)
+for i in gp_list_2s3r
+    gp_size_check_2s3r[i] += 1
+end
+#println(gp_size_check_2s2r)
+#println(gp_size_check_2s3r)
+
+gp = 1
+bad_id = findall(x -> x == gp, gp_list_2s2r)
+plot(p_arr_2s2r[bad_id[1]])
+
+for gp_id in 1:25
+    p_arr_subset = p_arr_total[findall(x -> x == gp_id, gp_list_2s3r)]
+    p_arr = p_arr_subset
+    tmp1 = length(p_arr)
+    if mod(tmp1, num_grid) != 0
+        for i in 1:(num_grid-mod(tmp1, num_grid))
+            push!(p_arr, blank)
+        end
     end
-    ## layout == (3,3) version
-    # plot(p_arr[num_grid*(iter_paper-1)+1], p_arr[num_grid*(iter_paper-1)+2], p_arr[num_grid*(iter_paper-1)+3],
-    #     p_arr[num_grid*(iter_paper-1)+4], p_arr[num_grid*(iter_paper-1)+5], p_arr[num_grid*(iter_paper-1)+6],
-    #     p_arr[num_grid*(iter_paper-1)+7], p_arr[num_grid*(iter_paper-1)+8], p_arr[num_grid*(iter_paper-1)+9],
-    #     layout=layout1)
 
-    ## layout == (3,4) version
-    plot(p_arr[num_grid*(iter_paper-1)+1], p_arr[num_grid*(iter_paper-1)+2], p_arr[num_grid*(iter_paper-1)+3], p_arr[num_grid*(iter_paper-1)+4],
-        p_arr[num_grid*(iter_paper-1)+5], p_arr[num_grid*(iter_paper-1)+6], p_arr[num_grid*(iter_paper-1)+7], p_arr[num_grid*(iter_paper-1)+8],
-        p_arr[num_grid*(iter_paper-1)+9], p_arr[num_grid*(iter_paper-1)+10], p_arr[num_grid*(iter_paper-1)+11], p_arr[num_grid*(iter_paper-1)+12],
-        layout=layout1)
+    num_paper = Int(length(p_arr) / num_grid)
+    for iter_paper in 1:num_paper
+        if mod(iter_paper, 10) == 1
+            @printf("======= Drawing paper sheet %4d =======\n", iter_paper)
+        end
+        ## layout == (3,3) version
+        # plot(p_arr[num_grid*(iter_paper-1)+1], p_arr[num_grid*(iter_paper-1)+2], p_arr[num_grid*(iter_paper-1)+3],
+        #     p_arr[num_grid*(iter_paper-1)+4], p_arr[num_grid*(iter_paper-1)+5], p_arr[num_grid*(iter_paper-1)+6],
+        #     p_arr[num_grid*(iter_paper-1)+7], p_arr[num_grid*(iter_paper-1)+8], p_arr[num_grid*(iter_paper-1)+9],
+        #     layout=layout1)
 
-    ## layout == (4,5) version
-    # plot(p_arr[num_grid*(iter_paper-1)+1], p_arr[num_grid*(iter_paper-1)+2], p_arr[num_grid*(iter_paper-1)+3],p_arr[num_grid*(iter_paper-1)+4], p_arr[num_grid*(iter_paper-1)+5],
-    # p_arr[num_grid*(iter_paper-1)+6], p_arr[num_grid*(iter_paper-1)+7], p_arr[num_grid*(iter_paper-1)+8],p_arr[num_grid*(iter_paper-1)+9], p_arr[num_grid*(iter_paper-1)+10],
-    # p_arr[num_grid*(iter_paper-1)+11], p_arr[num_grid*(iter_paper-1)+12], p_arr[num_grid*(iter_paper-1)+13],p_arr[num_grid*(iter_paper-1)+14], p_arr[num_grid*(iter_paper-1)+15],
-    # p_arr[num_grid*(iter_paper-1)+16], p_arr[num_grid*(iter_paper-1)+17], p_arr[num_grid*(iter_paper-1)+18],p_arr[num_grid*(iter_paper-1)+19], p_arr[num_grid*(iter_paper-1)+20],
-    #     layout=layout1)
-    plot!(size=(700, 500))
-    savefig(path * "Full_S" * string(num_S) * "R" * string(num_R) * "_max_ord" * string(max_order) * "_" * string(iter_paper) * ".png")
-    #savefig(path * "Filtered_S" * string(num_S) * "R" * string(num_R) * "_max_ord" * string(max_order) * "_" * string(iter_paper) * ".png")
+        ## layout == (3,4) version
+        plot(p_arr[num_grid*(iter_paper-1)+1], p_arr[num_grid*(iter_paper-1)+2], p_arr[num_grid*(iter_paper-1)+3], p_arr[num_grid*(iter_paper-1)+4],
+            p_arr[num_grid*(iter_paper-1)+5], p_arr[num_grid*(iter_paper-1)+6], p_arr[num_grid*(iter_paper-1)+7], p_arr[num_grid*(iter_paper-1)+8],
+            p_arr[num_grid*(iter_paper-1)+9], p_arr[num_grid*(iter_paper-1)+10], p_arr[num_grid*(iter_paper-1)+11], p_arr[num_grid*(iter_paper-1)+12],
+            layout=layout1)
+
+        ## layout == (4,5) version
+        # plot(p_arr[num_grid*(iter_paper-1)+1], p_arr[num_grid*(iter_paper-1)+2], p_arr[num_grid*(iter_paper-1)+3],p_arr[num_grid*(iter_paper-1)+4], p_arr[num_grid*(iter_paper-1)+5],
+        # p_arr[num_grid*(iter_paper-1)+6], p_arr[num_grid*(iter_paper-1)+7], p_arr[num_grid*(iter_paper-1)+8],p_arr[num_grid*(iter_paper-1)+9], p_arr[num_grid*(iter_paper-1)+10],
+        # p_arr[num_grid*(iter_paper-1)+11], p_arr[num_grid*(iter_paper-1)+12], p_arr[num_grid*(iter_paper-1)+13],p_arr[num_grid*(iter_paper-1)+14], p_arr[num_grid*(iter_paper-1)+15],
+        # p_arr[num_grid*(iter_paper-1)+16], p_arr[num_grid*(iter_paper-1)+17], p_arr[num_grid*(iter_paper-1)+18],p_arr[num_grid*(iter_paper-1)+19], p_arr[num_grid*(iter_paper-1)+20],
+        #     layout=layout1)
+        plot!(size=(700, 500))
+        savefig(path * "Grouped_S" * string(num_S) * "R" * string(num_R) * "_max_ord" * string(max_order) * "_gp" * string(gp_id) * "_" * string(iter_paper) * ".png")
+        #savefig(path * "Filtered_S" * string(num_S) * "R" * string(num_R) * "_max_ord" * string(max_order) * "_" * string(iter_paper) * ".png")
+    end
 end
 
