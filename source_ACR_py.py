@@ -64,11 +64,18 @@ def crn_writing(source_mat, product_mat):
 
 def crn_embedding(source_mat, product_mat, shake=True):
     num_S, num_R = source_mat.shape
-    maxlim = 2
+    axes_lim = [-0.1, 2.1]
 
     if num_S == 2:
         fig, ax = plt.subplots()
         # ax.plot([0.0, maxlim], [0.0, maxlim])
+        ax.set_xlim(axes_lim)
+        ax.set_ylim(axes_lim)
+        ax.set_xticks([0,1,2]);
+        ax.set_yticks([0,1,2]);
+        ax.set_xlabel('A');
+        ax.set_ylabel('B');
+        ax.grid()
         for i in range(num_R):
             if shake:
                 move = np.random.rand(num_S) * 0.1 - 0.05
@@ -81,7 +88,17 @@ def crn_embedding(source_mat, product_mat, shake=True):
     elif num_S == 3:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        ax.plot([0.0, maxlim], [0.0, maxlim], [0.0, maxlim])
+        #ax.plot([0.0, maxlim], [0.0, maxlim], [0.0, maxlim])
+        ax.set_xlim(axes_lim)
+        ax.set_ylim(axes_lim)
+        ax.set_zlim(axes_lim)
+        ax.set_xticks([0,1,2]);
+        ax.set_yticks([0,1,2]);
+        ax.set_zticks([0,1,2]);
+        ax.set_xlabel('A');
+        ax.set_ylabel('B');
+        ax.set_zlabel('C');
+        ax.grid()
         for i in range(num_R):
             if shake:
                 move = np.random.rand(num_S) * 0.1 - 0.05
@@ -92,7 +109,7 @@ def crn_embedding(source_mat, product_mat, shake=True):
                       product_mat[0, i] - source_mat[0, i], product_mat[1, i] - source_mat[1, i],
                       product_mat[2, i] - source_mat[2, i], color='black', linewidth=1.5)
     else:
-        print("Visualization is possible only when the number of species is either 2 or 3. 'nothing' is returned")
+        print("Visualization is possible only when the number of species is either 2 or 3. 'None' is returned")
         return None
 
     # plt.show()
@@ -100,19 +117,26 @@ def crn_embedding(source_mat, product_mat, shake=True):
 
 def crn_embedding_info(source_mat, product_mat, acr_id, unbnd_id, shake=True):
     num_S, num_R = source_mat.shape
-    maxlim = 2
+    axes_lim = [-0.1, 2.1]
     acr_id_tf = acr_id > 0
     unbnd_id_tf = unbnd_id > 0
     r = np.linalg.matrix_rank(product_mat - source_mat)
 
     if num_S == 2:
-        text_id_acr = acr_id_tf[0] * 1 + acr_id_tf[1] * 2 + 1
+        text_id_acr = acr_id_tf[0] * 1 + acr_id_tf[1] * 2
         acr_sp = ["∅", "A", "B", "A,B"][text_id_acr]
-        text_id_unbnd = unbnd_id_tf[0] * 1 + unbnd_id_tf[1] * 2 + 1
+        text_id_unbnd = unbnd_id_tf[0] * 1 + unbnd_id_tf[1] * 2
         unbnd_sp = ["∅", "A", "B", "A,B"][text_id_unbnd]
 
         fig, ax = plt.subplots()
-        ax.plot([0.0, maxlim], [0.0, maxlim])
+        #ax.plot([0.0, maxlim], [0.0, maxlim])
+        ax.set_xlim(axes_lim)
+        ax.set_ylim(axes_lim)
+        ax.set_xticks([0,1,2]);
+        ax.set_yticks([0,1,2]);
+        ax.set_xlabel('A');
+        ax.set_ylabel('B');
+        ax.grid()
         for i in range(num_R):
             if shake:
                 move = np.random.rand(num_S) * 0.1 - 0.05
@@ -125,14 +149,24 @@ def crn_embedding_info(source_mat, product_mat, acr_id, unbnd_id, shake=True):
 
         ax.annotate(f"ACR: {acr_sp}\nUnb: {unbnd_sp}\ndim(S): {r}", (1.25, 1.7), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=9)
     elif num_S == 3:
-        text_id_acr = acr_id_tf[0] * 1 + acr_id_tf[1] * 2 + acr_id_tf[2] * 4 + 1
+        text_id_acr = acr_id_tf[0] * 1 + acr_id_tf[1] * 2 + acr_id_tf[2] * 4
         acr_sp = ["∅", "A", "B", "A,B", "C", "A,C", "B,C", "A,B,C"][text_id_acr]
-        text_id_unbnd = unbnd_id_tf[0] * 1 + unbnd_id_tf[1] * 2 + unbnd_id_tf[2] * 4 + 1
+        text_id_unbnd = unbnd_id_tf[0] * 1 + unbnd_id_tf[1] * 2 + unbnd_id_tf[2] * 4
         unbnd_sp = ["∅", "A", "B", "A,B", "C", "A,C", "B,C", "A,B,C"][text_id_unbnd]
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        ax.plot([0.0, maxlim], [0.0, maxlim], [0.0, maxlim])
+        #ax.plot([0.0, maxlim], [0.0, maxlim], [0.0, maxlim])
+        ax.set_xlim(axes_lim)
+        ax.set_ylim(axes_lim)
+        ax.set_zlim(axes_lim)
+        ax.set_xticks([0,1,2]);
+        ax.set_yticks([0,1,2]);
+        ax.set_zticks([0,1,2]);
+        ax.set_xlabel('A');
+        ax.set_ylabel('B');
+        ax.set_zlabel('C');
+        ax.grid()
         for i in range(num_R):
             if shake:
                 move = np.random.rand(num_S) * 0.1 - 0.05
@@ -145,7 +179,7 @@ def crn_embedding_info(source_mat, product_mat, acr_id, unbnd_id, shake=True):
 
         ax.text(1.7, 1.7, 1.7, f"ACR: {acr_sp}\nUnb: {unbnd_sp}\ndim(S): {r}", fontsize=9)
     else:
-        print("Visualization is possible only when the number of species is either 2 or 3. 'nothing' is returned")
+        print("Visualization is possible only when the number of species is either 2 or 3. 'None' is returned")
         return None
 
     # plt.show()
@@ -156,27 +190,25 @@ def grouping_network(source_mat, product_mat, acr_id, unbnd_id):
     acr_id_tf = acr_id > 0
     unbnd_id_tf = unbnd_id > 0
     r = np.linalg.matrix_rank(product_mat - source_mat)
-    gp = None
+    #gp = None
 
     if num_S == 2:
-        text_id_acr = acr_id_tf[0] * 1 + acr_id_tf[1] * 2 + 1
-        acr_sp = ["∅", "A", "B", "A,B"][text_id_acr]
-        text_id_unbnd = unbnd_id_tf[0] * 1 + unbnd_id_tf[1] * 2 + 1
-        unbnd_sp = ["∅", "A", "B", "A,B"][text_id_unbnd]
-
-        if text_id_acr == 1: # no ACR
-            gp = 1
-        elif text_id_acr == 2: # ACR species: A
-            gp = 4 * (r - 1) + text_id_unbnd + 1
-        elif text_id_acr == 3: # ACR species: B
-            gp = 4 * (r - 1) + text_id_unbnd + 9
-        else: # text_id_acr == 4 # ACR species: A, B
-            gp = 4 * (r - 1) + text_id_unbnd + 17
+        text_id_acr = acr_id_tf[0] * 1 + acr_id_tf[1] * 2
+        #acr_sp = ["∅", "A", "B", "A,B"][text_id_acr]
+        text_id_unbnd = unbnd_id_tf[0] * 1 + unbnd_id_tf[1] * 2
+        #unbnd_sp = ["∅", "A", "B", "A,B"][text_id_unbnd]
+        gp_str = str(r)+str(text_id_acr)+str(text_id_unbnd)
+    elif num_S == 3:
+        text_id_acr = acr_id_tf[0] * 1 + acr_id_tf[1] * 2 + acr_id_tf[2] * 4
+        #acr_sp = ["∅", "A", "B", "A,B", "C", "A,C", "B,C", "A,B,C"][text_id_acr]
+        text_id_unbnd = unbnd_id_tf[0] * 1 + unbnd_id_tf[1] * 2 + unbnd_id_tf[2] * 4
+        #unbnd_sp = ["∅", "A", "B", "A,B", "C", "A,C", "B,C", "A,B,C"][text_id_unbnd]
+        gp_str = str(r)+str(text_id_acr)+str(text_id_unbnd)
     else:
-        print("Grouping network is currently possible only when the number of species is either 2. 'nothing' is returned")
+        print("Grouping network is currently possible only when the number of species is either 2 or 3. 'None' is returned")
         return None
 
-    return gp
+    return gp_str
 
 def make_total_complexes(num_S, max_order):
     num_total_C = int(binom(max_order + num_S, num_S))
@@ -208,25 +240,25 @@ def net_id_to_r_id_list(net_id, num_total_R, num_R):
     reaction_id_list = np.zeros(num_R, dtype=int) # the list contains the id for reaction r_1, r_2, ..., r_{num_R}.
     # Those id's have to satisfy 1 <= r_1 < r_2 < ... < r_{num_R} <= num_total_R.
 
-    if net_id > binom(num_total_R, num_R) or net_id < 1:
-        print("The given network id must be between 1 and binom(num_total_R, num_R). 'nothing' is returned.")
+    if net_id > int(binom(num_total_R, num_R)) or net_id < 1:
+        print("The given network id must be between 1 and binom(num_total_R, num_R). 'None' is returned.")
         return None
     # Determine the first reaction id, r_1.
     for j in range(1, num_total_R - num_R + 2):
-        tmp_id -= binom(num_total_R - j, num_R - 1)
+        tmp_id -= int(binom(num_total_R - j, num_R - 1))
 
         if tmp_id <= 0:
-            tmp_id += binom(num_total_R - j, num_R - 1)
+            tmp_id += int(binom(num_total_R - j, num_R - 1))
             reaction_id_list[0] = j
             break
     
     # Determine the second to last reactions id, r_2, r_3, ... , r_{num_R}.
     for i in range(2, num_R + 1):
-        for j in range(reaction_id_list[i - 2] + 1, num_total_R - num_R + i):
-            tmp_id -= binom(num_total_R - j, num_R - i)
+        for j in range(reaction_id_list[i - 2] + 1, num_total_R - num_R + i + 1):
+            tmp_id -= int(binom(num_total_R - j, num_R - i))
 
             if tmp_id <= 0:
-                tmp_id += binom(num_total_R - j, num_R - i)
+                tmp_id += int(binom(num_total_R - j, num_R - i))
                 reaction_id_list[i - 1] = j
                 break
 

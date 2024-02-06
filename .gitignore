@@ -3,3 +3,6 @@ data/
 plots/
 .DS_Store
 *.zip
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*.ipynb_checkpoints
+__pycache__

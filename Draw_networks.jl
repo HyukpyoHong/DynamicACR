@@ -1,5 +1,5 @@
 include("source_ACR.jl")
-import .source_ACR as acr
+import source_ACR as acr
 
 ## Initialization
 using Pkg

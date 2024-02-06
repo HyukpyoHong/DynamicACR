@@ -162,26 +162,25 @@ function grouping_network(source_mat, product_mat, acr_id, unbnd_id)
     acr_id_tf = acr_id .> 0
     unbnd_id_tf = unbnd_id .> 0
     r = rank(product_mat - source_mat)
-    gp = nothing
+    #gp = nothing
     if num_S == 2
         text_id_acr = acr_id_tf[1] * 1 + acr_id_tf[2] * 2 + 1
-        acr_sp = ["∅" "A" "B" "A,B"][text_id_acr]
+        #acr_sp = ["∅" "A" "B" "A,B"][text_id_acr]
         text_id_unbnd = unbnd_id_tf[1] * 1 + unbnd_id_tf[2] * 2 + 1
-        unbnd_sp = ["∅" "A" "B" "A,B"][text_id_unbnd]
-        if text_id_acr == 1 # no ACR
-            gp = 1
-        elseif text_id_acr == 2 # ACR species: A
-            gp = 4*(r-1) + text_id_unbnd + 1
-        elseif text_id_acr == 3 # ACR species: B
-            gp = 4*(r-1) + text_id_unbnd + 9
-        else # text_id_acr == 4 # ACR species: A, B
-            gp = 4*(r-1) + text_id_unbnd + 17
-        end
+        #unbnd_sp = ["∅" "A" "B" "A,B"][text_id_unbnd]
+        gp_str = String(r)*String(text_id_acr)*String(text_id_unbnd)
+        
+    elseif num_S ==3 
+        text_id = acr_id_tf[1] * 1 + acr_id_tf[2] * 2 + acr_id_tf[3] * 4 + 1
+#         acr_sp = ["∅" "A" "B" "A,B" "C" "A,C" "B,C" "A,B,C"][text_id]
+        text_id = unbnd_id_tf[1] * 1 + unbnd_id_tf[2] * 2 + unbnd_id_tf[3] * 4 + 1
+#         unbnd_sp = ["∅" "A" "B" "A,B" "C" "A,C" "B,C" "A,B,C"][text_id]
+        gp_str = String(r)*String(text_id_acr)*String(text_id_unbnd)
     else
-        @warn "Grouping network is currently possible only when the number of species is either 2. 'nothing' is returnded"
+        @warn "Grouping network is currently possible only when the number of species is either 2 or 3. 'nothing' is returnded"
         return nothing
     end
-    return gp
+    return gp_str
 end
 
 function make_total_complexes(num_S, max_order)
