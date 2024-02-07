@@ -3,6 +3,60 @@ import matplotlib.pyplot as plt
 from scipy.special import binom
 from mpl_toolkits.mplot3d import Axes3D
 
+def make_total_complexes(num_S, max_order):
+    num_total_C = int(binom(max_order + num_S, num_S))
+    tmp_cmplx = np.zeros(num_S, dtype = int)
+    total_complex = np.zeros((num_S, num_total_C), dtype = int)
+
+    for i in range(num_total_C):
+        for j in range(num_S):
+            if np.sum(tmp_cmplx) > max_order:
+                tmp_cmplx[j] = 0
+                tmp_cmplx[j + 1] += 1
+        #total_complex[:, i] = tmp_cmplx.copy()
+        total_complex[:, i] = tmp_cmplx.copy()
+        tmp_cmplx[0] += 1
+        
+    return total_complex
+
+def reaction_to_complex(r_id, num_total_C):
+    source_id = int(np.floor((r_id - 1) / (num_total_C - 1))) + 1
+    product_id = int(np.mod((r_id - 1), (num_total_C - 1))) + 1
+
+    if source_id <= product_id:
+        product_id += 1
+
+    return source_id, product_id
+
+def net_id_to_r_id_list(net_id, num_total_R, num_R):
+    tmp_id = net_id
+    reaction_id_list = np.zeros(num_R, dtype=int) # the list contains the id for reaction r_1, r_2, ..., r_{num_R}.
+    # Those id's have to satisfy 1 <= r_1 < r_2 < ... < r_{num_R} <= num_total_R.
+
+    if net_id > int(binom(num_total_R, num_R)) or net_id < 1:
+        print("The given network id must be between 1 and binom(num_total_R, num_R). 'None' is returned.")
+        return None
+    # Determine the first reaction id, r_1.
+    for j in range(1, num_total_R - num_R + 2):
+        tmp_id -= int(binom(num_total_R - j, num_R - 1))
+
+        if tmp_id <= 0:
+            tmp_id += int(binom(num_total_R - j, num_R - 1))
+            reaction_id_list[0] = j
+            break
+    
+    # Determine the second to last reactions id, r_2, r_3, ... , r_{num_R}.
+    for i in range(2, num_R + 1):
+        for j in range(reaction_id_list[i - 2] + 1, num_total_R - num_R + i + 1):
+            tmp_id -= int(binom(num_total_R - j, num_R - i))
+
+            if tmp_id <= 0:
+                tmp_id += int(binom(num_total_R - j, num_R - i))
+                reaction_id_list[i - 1] = j
+                break
+
+    return reaction_id_list
+
 def crn_writing(source_mat, product_mat):
     num_S, num_R = source_mat.shape
 
@@ -147,7 +201,8 @@ def crn_embedding_info(source_mat, product_mat, acr_id, unbnd_id, shake=True):
                      product_mat[0, i] - source_mat[0, i], product_mat[1, i] - source_mat[1, i],
                      head_width=0.05, head_length=0.1, fc='black', ec='black', linewidth=1.5)
 
-        ax.annotate(f"ACR: {acr_sp}\nUnb: {unbnd_sp}\ndim(S): {r}", (1.25, 1.7), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=9)
+        #ax.annotate(f"ACR: {acr_sp}\nUnb: {unbnd_sp}\ndim(S): {r}", (1.25, 1.7), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=9)
+        ax.text(1.7, 1.7, f"ACR: {acr_sp}\nUnb: {unbnd_sp}\ndim(S): {r}", fontsize=9)
     elif num_S == 3:
         text_id_acr = acr_id_tf[0] * 1 + acr_id_tf[1] * 2 + acr_id_tf[2] * 4
         acr_sp = ["∅", "A", "B", "A,B", "C", "A,C", "B,C", "A,B,C"][text_id_acr]
@@ -209,57 +264,3 @@ def grouping_network(source_mat, product_mat, acr_id, unbnd_id):
         return None
 
     return gp_str
-
-def make_total_complexes(num_S, max_order):
-    num_total_C = int(binom(max_order + num_S, num_S))
-    tmp_cmplx = np.zeros(num_S, dtype = int)
-    total_complex = np.zeros((num_S, num_total_C), dtype = int)
-
-    for i in range(num_total_C):
-        for j in range(num_S):
-            if np.sum(tmp_cmplx) > max_order:
-                tmp_cmplx[j] = 0
-                tmp_cmplx[j + 1] += 1
-        #total_complex[:, i] = tmp_cmplx.copy()
-        total_complex[:, i] = tmp_cmplx.copy()
-        tmp_cmplx[0] += 1
-        
-    return total_complex
-
-def reaction_to_complex(r_id, num_total_C):
-    source_id = int(np.floor((r_id - 1) / (num_total_C - 1))) + 1
-    product_id = int(np.mod((r_id - 1), (num_total_C - 1))) + 1
-
-    if source_id <= product_id:
-        product_id += 1
-
-    return source_id, product_id
-
-def net_id_to_r_id_list(net_id, num_total_R, num_R):
-    tmp_id = net_id
-    reaction_id_list = np.zeros(num_R, dtype=int) # the list contains the id for reaction r_1, r_2, ..., r_{num_R}.
-    # Those id's have to satisfy 1 <= r_1 < r_2 < ... < r_{num_R} <= num_total_R.
-
-    if net_id > int(binom(num_total_R, num_R)) or net_id < 1:
-        print("The given network id must be between 1 and binom(num_total_R, num_R). 'None' is returned.")
-        return None
-    # Determine the first reaction id, r_1.
-    for j in range(1, num_total_R - num_R + 2):
-        tmp_id -= int(binom(num_total_R - j, num_R - 1))
-
-        if tmp_id <= 0:
-            tmp_id += int(binom(num_total_R - j, num_R - 1))
-            reaction_id_list[0] = j
-            break
-    
-    # Determine the second to last reactions id, r_2, r_3, ... , r_{num_R}.
-    for i in range(2, num_R + 1):
-        for j in range(reaction_id_list[i - 2] + 1, num_total_R - num_R + i + 1):
-            tmp_id -= int(binom(num_total_R - j, num_R - i))
-
-            if tmp_id <= 0:
-                tmp_id += int(binom(num_total_R - j, num_R - i))
-                reaction_id_list[i - 1] = j
-                break
-
-    return reaction_id_list
