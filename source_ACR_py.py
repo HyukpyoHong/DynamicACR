@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 from scipy.special import binom
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -132,13 +133,13 @@ def crn_embedding(source_mat, product_mat, shake=True):
         ax.grid()
         for i in range(num_R):
             if shake:
-                move = np.random.rand(num_S) * 0.1 - 0.05
+                move = np.random.rand(num_S) * 0.14 - 0.07
             else:
                 move = np.zeros(num_S)
 
             ax.arrow(source_mat[0, i] + move[0], source_mat[1, i] + move[1],
                      product_mat[0, i] - source_mat[0, i], product_mat[1, i] - source_mat[1, i],
-                     head_width=0.05, head_length=0.1, fc='black', ec='black', linewidth=1.5)
+                     head_width=0.15, head_length=0.15, length_includes_head = True, fc='black', ec='black')
     elif num_S == 3:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
@@ -155,13 +156,13 @@ def crn_embedding(source_mat, product_mat, shake=True):
         ax.grid()
         for i in range(num_R):
             if shake:
-                move = np.random.rand(num_S) * 0.1 - 0.05
+                move = np.random.rand(num_S) * 0.14 - 0.07
             else:
                 move = np.zeros(num_S)
 
             ax.quiver(source_mat[0, i] + move[0], source_mat[1, i] + move[1], source_mat[2, i] + move[2],
                       product_mat[0, i] - source_mat[0, i], product_mat[1, i] - source_mat[1, i],
-                      product_mat[2, i] - source_mat[2, i], color='black', linewidth=1.5)
+                      product_mat[2, i] - source_mat[2, i], color='black')
     else:
         print("Visualization is possible only when the number of species is either 2 or 3. 'None' is returned")
         return None
@@ -193,16 +194,15 @@ def crn_embedding_info(source_mat, product_mat, acr_id, unbnd_id, shake=True):
         ax.grid()
         for i in range(num_R):
             if shake:
-                move = np.random.rand(num_S) * 0.1 - 0.05
+                move = np.random.rand(num_S) * 0.14 - 0.07
             else:
                 move = np.zeros(num_S)
 
             ax.arrow(source_mat[0, i] + move[0], source_mat[1, i] + move[1],
                      product_mat[0, i] - source_mat[0, i], product_mat[1, i] - source_mat[1, i],
-                     head_width=0.05, head_length=0.1, fc='black', ec='black', linewidth=1.5)
+                     head_width=0.15, head_length=0.15, length_includes_head = True, fc='black', ec='black', linewidth=1.5)
 
-        #ax.annotate(f"ACR: {acr_sp}\nUnb: {unbnd_sp}\ndim(S): {r}", (1.25, 1.7), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=9)
-        ax.text(1.7, 1.7, f"ACR: {acr_sp}\nUnb: {unbnd_sp}\ndim(S): {r}", fontsize=9)
+        ax.text(1.2, 1.4, f"ACR: {acr_sp}\nUnb: {unbnd_sp}\ndim(S): {r}", fontsize=9)
     elif num_S == 3:
         text_id_acr = acr_id_tf[0] * 1 + acr_id_tf[1] * 2 + acr_id_tf[2] * 4
         acr_sp = ["∅", "A", "B", "A,B", "C", "A,C", "B,C", "A,B,C"][text_id_acr]
@@ -224,21 +224,87 @@ def crn_embedding_info(source_mat, product_mat, acr_id, unbnd_id, shake=True):
         ax.grid()
         for i in range(num_R):
             if shake:
-                move = np.random.rand(num_S) * 0.1 - 0.05
+                move = np.random.rand(num_S) * 0.14 - 0.07
             else:
                 move = np.zeros(num_S)
 
             ax.quiver(source_mat[0, i] + move[0], source_mat[1, i] + move[1], source_mat[2, i] + move[2],
                       product_mat[0, i] - source_mat[0, i], product_mat[1, i] - source_mat[1, i],
-                      product_mat[2, i] - source_mat[2, i], color='black', linewidth=1.5)
+                      product_mat[2, i] - source_mat[2, i], color='black')
 
-        ax.text(1.7, 1.7, 1.7, f"ACR: {acr_sp}\nUnb: {unbnd_sp}\ndim(S): {r}", fontsize=9)
+        ax.text(1.2, 1.4, 1.4, f"ACR: {acr_sp}\nUnb: {unbnd_sp}\ndim(S): {r}", fontsize=9)
     else:
         print("Visualization is possible only when the number of species is either 2 or 3. 'None' is returned")
         return None
 
     # plt.show()
     return fig, ax
+
+def add_CRN_to_Axes(axes, row, col, source_mat, product_mat, acr_id, unbnd_id):
+    ax = axes[row,col]
+    num_S, num_R = source_mat.shape
+    axes_lim = [-0.1, 2.1]
+    shake = True
+
+    acr_id_tf = acr_id > 0
+    unbnd_id_tf = unbnd_id > 0
+    r = np.linalg.matrix_rank(product_mat - source_mat)
+        
+    if num_S == 2:
+        text_id_acr = acr_id_tf[0] * 1 + acr_id_tf[1] * 2
+        acr_sp = ["∅", "A", "B", "A,B"][text_id_acr]
+        text_id_unbnd = unbnd_id_tf[0] * 1 + unbnd_id_tf[1] * 2
+        unbnd_sp = ["∅", "A", "B", "A,B"][text_id_unbnd]
+
+        ax.set_xlim(axes_lim)
+        ax.set_ylim(axes_lim)
+        ax.set_xticks([0,1,2]);
+        ax.set_yticks([0,1,2]);
+        ax.set_xlabel('A');
+        ax.set_ylabel('B');
+        ax.grid()
+        for i in range(num_R):
+            if shake:
+                move = np.random.rand(num_S) * 0.14 - 0.07
+            else:
+                move = np.zeros(num_S)
+            
+            ax.arrow(source_mat[0, i] + move[0], source_mat[1, i] + move[1],
+                     product_mat[0, i] - source_mat[0, i], product_mat[1, i] - source_mat[1, i],
+                     head_width=0.15, head_length=0.15, length_includes_head = True, fc='black', ec='black')
+        ax.text(1.2, 1.4, f"ACR: {acr_sp}\nUnb: {unbnd_sp}\ndim(S): {r}", fontsize=9)
+    elif num_S == 3:
+        text_id_acr = acr_id_tf[0] * 1 + acr_id_tf[1] * 2 + acr_id_tf[2] * 4
+        acr_sp = ["∅", "A", "B", "A,B", "C", "A,C", "B,C", "A,B,C"][text_id_acr]
+        text_id_unbnd = unbnd_id_tf[0] * 1 + unbnd_id_tf[1] * 2 + unbnd_id_tf[2] * 4
+        unbnd_sp = ["∅", "A", "B", "A,B", "C", "A,C", "B,C", "A,B,C"][text_id_unbnd]
+
+        ax.set_xlim(axes_lim)
+        ax.set_ylim(axes_lim)
+        ax.set_zlim(axes_lim)
+        ax.set_xticks([0,1,2]);
+        ax.set_yticks([0,1,2]);
+        ax.set_zticks([0,1,2]);
+        ax.set_xlabel('A');
+        ax.set_ylabel('B');
+        ax.set_zlabel('C');
+        ax.grid()
+        for i in range(num_R):
+            if shake:
+                move = np.random.rand(num_S) * 0.14 - 0.07
+            else:
+                move = np.zeros(num_S)
+                
+            ax.quiver(source_mat[0, i] + move[0], source_mat[1, i] + move[1], source_mat[2, i] + move[2],
+                      product_mat[0, i] - source_mat[0, i], product_mat[1, i] - source_mat[1, i],
+                      product_mat[2, i] - source_mat[2, i], color='black', linewidth=1.5)
+        ax.text(1.2, 1.4, 1.4, f"ACR: {acr_sp}\nUnb: {unbnd_sp}\ndim(S): {r}", fontsize=9)
+    else:
+        print("Visualization is possible only when the number of species is either 2 or 3. 'None' is returned")
+        return None
+    return None
+
+
 
 def grouping_network(source_mat, product_mat, acr_id, unbnd_id):
     num_S = source_mat.shape[0]
