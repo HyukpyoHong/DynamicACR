@@ -12,7 +12,7 @@ def MAK(t, x, kappa, source_mat, stoi_mat):
     dx_vec = np.matmul(stoi_mat, r)
     return dx_vec
 
-def MAK_rsc(t, x, kappa, source_mat, stoi_mat):
+def MAK_rescaled(t, x, kappa, source_mat, stoi_mat):
     f = np.zeros(len(kappa))
     for i in range(len(kappa)):
         f[i] = np.prod(np.power(x, source_mat[:,i]))
