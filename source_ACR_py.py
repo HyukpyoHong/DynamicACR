@@ -4,6 +4,23 @@ import math
 from scipy.special import binom
 from mpl_toolkits.mplot3d import Axes3D
 
+def MAK(t, x, kappa, source_mat, stoi_mat):
+    f = np.zeros(len(kappa))
+    for i in range(len(kappa)):
+        f[i] = np.prod(np.power(x, source_mat[:,i]))
+    r = kappa * f
+    dx_vec = np.matmul(stoi_mat, r)
+    return dx_vec
+
+def MAK_rsc(t, x, kappa, source_mat, stoi_mat):
+    f = np.zeros(len(kappa))
+    for i in range(len(kappa)):
+        f[i] = np.prod(np.power(x, source_mat[:,i]))
+    r = kappa * f
+    dx_vec = np.matmul(stoi_mat, r)
+    dx_vec_rsc = dx_vec / (1 + np.sqrt(np.sum(dx_vec**2)))
+    return dx_vec_rsc
+
 def make_total_complexes(num_S, max_order):
     num_total_C = int(binom(max_order + num_S, num_S))
     tmp_cmplx = np.zeros(num_S, dtype = int)
