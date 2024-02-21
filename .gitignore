@@ -5,4 +5,10 @@ plots/
 *.zip
 .ipynb_checkpoints
 */.ipynb_checkpoints/*.ipynb_checkpoints
+__pycache__/
 __pycache__
+# the below files are old.
+doodles.jl
+Draw_networks.jl
+Search_dynamic_ACR.jl
+source_ACR.jl
